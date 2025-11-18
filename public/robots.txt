@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Disallow admin pages if you add them
+# Disallow: /admin
+
+# Sitemap location
+Sitemap: ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/sitemap.xml
