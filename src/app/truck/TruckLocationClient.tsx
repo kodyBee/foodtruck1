@@ -195,7 +195,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             onClick={() => handleLocationClick(event.location)}
                             className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
                           >
-                            📍 {event.location}
+                          {event.location}
                           </button>
                           {event.description && (
                             <div className="text-xs text-gray-400 mt-1">{event.description}</div>
