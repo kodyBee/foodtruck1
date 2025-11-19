@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 import type { TruckLocation, TruckEvent, WeeklySchedule } from '@/types';
 
-export default function TruckLocationClient() {
+interface TruckLocationClientProps {
+  apiKey: string;
+}
+
+export default function TruckLocationClient({ apiKey }: TruckLocationClientProps) {
   const [location, setLocation] = useState<TruckLocation | null>(null);
   const [events, setEvents] = useState<TruckEvent[]>([]);
   const [schedule, setSchedule] = useState<WeeklySchedule[]>([]);
@@ -54,8 +58,6 @@ export default function TruckLocationClient() {
       </section>
     );
   }
-
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   
   // Use selected location if available, otherwise use current truck location
   const displayLocation = selectedLocation || location;
