@@ -109,85 +109,28 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
       try {
         const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(locationAddress)}`);
         const data = await response.json();
-        console.log('Resolved URL data:', data);
+        console.log('API response:', data);
         
+        if (data.placeName || (data.lat && data.lng)) {
+          const newLocation = {
+            address: data.placeName || locationAddress,
+            lat: data.lat,
+            lng: data.lng
+          };
+          console.log('Setting location:', newLocation);
+          setSelectedLocation(newLocation);
+          return;
+        }
+        
+        // Fallback: parse the resolved URL if API didn't extract info
         if (data.resolvedUrl) {
-          // Extract coordinates or place info from the resolved URL
           const fullUrl = data.resolvedUrl;
-          console.log('Full resolved URL:', fullUrl);
+          console.log('Parsing resolved URL:', fullUrl);
           
-          // First, try to extract place name from the URL path
-          // Format: /maps/place/Place+Name,Address/...
+          // Try to extract place name from the URL path
           const placeMatch = fullUrl.match(/\/maps\/place\/([^\/]+)/);
-          let placeName = '';
           if (placeMatch) {
-            placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-            console.log('Extracted place name:', placeName);
-          }
-          
-          // Try to extract coordinates from the data parameter
-          // Format: !3d30.4209052!4d-81.6969373 (latitude and longitude)
-          const latMatch = fullUrl.match(/!3d(-?\d+\.\d+)/);
-          const lngMatch = fullUrl.match(/!4d(-?\d+\.\d+)/);
-          
-          if (latMatch && lngMatch) {
-            const newLocation = {
-              address: placeName || locationAddress,
-              lat: parseFloat(latMatch[1]),
-              lng: parseFloat(lngMatch[1])
-            };
-            console.log('Setting location with coordinates:', newLocation);
-            setSelectedLocation(newLocation);
-            return;
-          }
-          
-          // Try to extract from hex-encoded coordinates in the path
-          // Some URLs use format: 0xHEX:0xHEX which represents lat/lng
-          const hexMatch = fullUrl.match(/0x([0-9a-f]+):0x([0-9a-f]+)/i);
-          if (hexMatch && placeName) {
-            // Use place name for search if we can't decode hex coordinates
-            console.log('Using place name for search:', placeName);
-            setSelectedLocation({ address: placeName });
-            return;
-          }
-          
-          // Fallback: Try to extract coordinates from various Google Maps URL formats
-          // Format: /maps/place/.../@lat,lng,zoom
-          const pathMatch = fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-          if (pathMatch) {
-            const newLocation = {
-              address: placeName || locationAddress,
-              lat: parseFloat(pathMatch[1]),
-              lng: parseFloat(pathMatch[2])
-            };
-            console.log('Setting location with coordinates from path:', newLocation);
-            setSelectedLocation(newLocation);
-            return;
-          }
-          
-          // Format: ?q=lat,lng
-          const urlObj = new URL(fullUrl);
-          const qParam = urlObj.searchParams.get('q');
-          if (qParam) {
-            const coordMatch = qParam.match(/(-?\d+\.\d+),(-?\d+\.\d+)/);
-            if (coordMatch) {
-              const newLocation = {
-                address: qParam,
-                lat: parseFloat(coordMatch[1]),
-                lng: parseFloat(coordMatch[2])
-              };
-              console.log('Setting location with coordinates from q param:', newLocation);
-              setSelectedLocation(newLocation);
-              return;
-            }
-            // If q parameter exists but isn't coordinates, use it as address
-            console.log('Setting location with q param address:', qParam);
-            setSelectedLocation({ address: qParam });
-            return;
-          }
-          
-          // If we extracted a place name, use it
-          if (placeName) {
+            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
             console.log('Setting location with place name:', placeName);
             setSelectedLocation({ address: placeName });
             return;
