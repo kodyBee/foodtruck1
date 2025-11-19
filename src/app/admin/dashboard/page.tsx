@@ -11,6 +11,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'location' | 'events' | 'schedule'>('location');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [debugApiResponse, setDebugApiResponse] = useState<any>(null);
 
   // Location state
   const [lat, setLat] = useState('');
@@ -246,6 +247,15 @@ export default function AdminDashboard() {
     // If mapsLink is provided, parse it
     if (mapsLink.trim()) {
       console.log('[AdminDashboard] Submitting mapsLink:', mapsLink);
+      // Directly call the API for debug
+      try {
+        const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(mapsLink)}`);
+        const data = await response.json();
+        setDebugApiResponse(data);
+        console.log('[AdminDashboard] API response:', data);
+      } catch (err) {
+        setDebugApiResponse({ error: 'API call failed' });
+      }
       const parsed = await parseGoogleMapsLink(mapsLink);
       console.log('[AdminDashboard] parseGoogleMapsLink result:', parsed);
       if (parsed) {
@@ -414,6 +424,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-900 to-black">
+      {debugApiResponse && (
+        <div className="bg-gray-900 border border-red-500 text-red-500 p-4 mb-4 rounded">
+          <strong>API Debug Response:</strong>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(debugApiResponse, null, 2)}</pre>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-neutral-900 border-b border-yellow-500/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
