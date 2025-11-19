@@ -53,7 +53,10 @@ export async function GET(request: Request) {
     // If coordinates are missing but placeName is available, use Google Geocoding API
     if ((!lat || !lng) && placeName) {
       try {
-        const apiKey = "AIzaSyB2Le7CZu6DgENeLQczIlQr-bIedFpSZ7w";
+        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          throw new Error('GOOGLE_MAPS_API_KEY environment variable not set');
+        }
         const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(placeName)}&key=${apiKey}`;
         const geoRes = await fetch(geocodeUrl);
         const geoData = await geoRes.json();
