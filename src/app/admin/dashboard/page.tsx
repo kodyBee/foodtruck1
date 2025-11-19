@@ -253,6 +253,15 @@ export default function AdminDashboard() {
         const data = await response.json();
         setDebugApiResponse(data);
         console.log('[AdminDashboard] API response:', data);
+        // If lat/lng are missing but placeName is present, set address to placeName
+        if (!data.lat && !data.lng && data.placeName) {
+          setAddress(data.placeName);
+          setLat('');
+          setLng('');
+          // Allow saving with just address
+          finalLat = '';
+          finalLng = '';
+        }
       } catch (err) {
         setDebugApiResponse({ error: 'API call failed' });
       }
@@ -263,6 +272,8 @@ export default function AdminDashboard() {
         finalLng = parsed.lng;
         setLat(parsed.lat);
         setLng(parsed.lng);
+      } else if (!finalLat && !finalLng && address) {
+        // If we have an address, allow saving with just address
       } else {
         setMessage('Invalid Google Maps link. Please check the URL and try again.');
         setLoading(false);
