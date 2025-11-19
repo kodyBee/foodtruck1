@@ -85,12 +85,26 @@ export default function AdminDashboard() {
       let urlToCheck = link;
 
       // Resolve shortened links
-      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps')) {
+      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps') || link.includes('goo.gl')) {
         try {
           const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(link)}`);
           if (response.ok) {
             const data = await response.json();
-            urlToCheck = data.resolvedUrl || link;
+            
+            // If API returned a place name, use it directly
+            if (data.placeName) {
+              return data.placeName;
+            }
+            
+            // If we got coordinates but no place name, use them
+            if (data.lat && data.lng) {
+              return `${data.lat}, ${data.lng}`;
+            }
+            
+            // Fall back to parsing the resolved URL
+            if (data.resolvedUrl) {
+              urlToCheck = data.resolvedUrl;
+            }
           }
         } catch (e) {
           console.error('Failed to resolve short link:', e);
@@ -142,12 +156,26 @@ export default function AdminDashboard() {
       let urlToCheck = link;
 
       // If it's a shortened link, we need to fetch it to get redirected URL
-      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps')) {
+      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps') || link.includes('goo.gl')) {
         try {
           const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(link)}`);
           if (response.ok) {
             const data = await response.json();
-            urlToCheck = data.resolvedUrl || link;
+            console.log('Resolved data:', data);
+            
+            // If API returned parsed coordinates and place name, use them directly
+            if (data.lat && data.lng) {
+              // Also update the address if we got a place name
+              if (data.placeName && !address) {
+                setAddress(data.placeName);
+              }
+              return { lat: data.lat.toString(), lng: data.lng.toString() };
+            }
+            
+            // Fall back to parsing the resolved URL
+            if (data.resolvedUrl) {
+              urlToCheck = data.resolvedUrl;
+            }
           }
         } catch (e) {
           // If resolution fails, try to parse the original link anyway
