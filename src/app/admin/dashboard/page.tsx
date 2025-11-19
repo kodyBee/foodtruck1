@@ -245,7 +245,9 @@ export default function AdminDashboard() {
 
     // If mapsLink is provided, parse it
     if (mapsLink.trim()) {
+      console.log('[AdminDashboard] Submitting mapsLink:', mapsLink);
       const parsed = await parseGoogleMapsLink(mapsLink);
+      console.log('[AdminDashboard] parseGoogleMapsLink result:', parsed);
       if (parsed) {
         finalLat = parsed.lat;
         finalLng = parsed.lng;
@@ -490,7 +492,10 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   value={mapsLink}
-                  onChange={(e) => setMapsLink(e.target.value)}
+                  onChange={(e) => {
+                    setMapsLink(e.target.value);
+                    console.log('[AdminDashboard] mapsLink input changed:', e.target.value);
+                  }}
                   className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
                   placeholder="Paste Google Maps link here (e.g., https://maps.app.goo.gl/...)"
                 />
