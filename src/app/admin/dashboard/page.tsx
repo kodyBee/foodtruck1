@@ -247,6 +247,9 @@ export default function AdminDashboard() {
     // If mapsLink is provided, parse it
     if (mapsLink.trim()) {
       console.log('[AdminDashboard] Submitting mapsLink:', mapsLink);
+      let apiAddress = address;
+      let apiLat = lat;
+      let apiLng = lng;
       // Directly call the API for debug
       try {
         const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(mapsLink)}`);
@@ -255,12 +258,17 @@ export default function AdminDashboard() {
         console.log('[AdminDashboard] API response:', data);
         // If lat/lng are missing but placeName is present, set address to placeName
         if (!data.lat && !data.lng && data.placeName) {
+          apiAddress = data.placeName;
+          apiLat = '';
+          apiLng = '';
           setAddress(data.placeName);
           setLat('');
           setLng('');
-          // Allow saving with just address
-          finalLat = '';
-          finalLng = '';
+        } else if (data.lat && data.lng) {
+          apiLat = data.lat.toString();
+          apiLng = data.lng.toString();
+          setLat(apiLat);
+          setLng(apiLng);
         }
       } catch (err) {
         setDebugApiResponse({ error: 'API call failed' });
@@ -268,17 +276,20 @@ export default function AdminDashboard() {
       const parsed = await parseGoogleMapsLink(mapsLink);
       console.log('[AdminDashboard] parseGoogleMapsLink result:', parsed);
       if (parsed) {
-        finalLat = parsed.lat;
-        finalLng = parsed.lng;
+        apiLat = parsed.lat;
+        apiLng = parsed.lng;
         setLat(parsed.lat);
         setLng(parsed.lng);
-      } else if (!finalLat && !finalLng && address) {
-        // If we have an address, allow saving with just address
-      } else {
+      }
+      // Only show error if both address and coordinates are missing
+      if (!apiAddress && !apiLat && !apiLng) {
         setMessage('Invalid Google Maps link. Please check the URL and try again.');
         setLoading(false);
         return;
       }
+      finalLat = apiLat;
+      finalLng = apiLng;
+      setAddress(apiAddress);
     }
 
     // Validate we have coordinates
