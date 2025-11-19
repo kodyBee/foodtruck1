@@ -156,6 +156,17 @@ export default function AdminDashboard() {
       }
 
       // Handle different Google Maps URL formats:
+      // First, try to get the actual place coordinates from the data parameter (most accurate)
+      // Format: !3d30.4209052!4d-81.6969373 (latitude and longitude)
+      const dataParam = urlToCheck;
+      const latMatch = dataParam.match(/!3d(-?\d+\.?\d*)/);
+      const lngMatch = dataParam.match(/!4d(-?\d+\.?\d*)/);
+      
+      if (latMatch && lngMatch) {
+        return { lat: latMatch[1], lng: lngMatch[1] };
+      }
+
+      // Fallback formats:
       // 1. https://www.google.com/maps/place/.../@LAT,LNG,ZOOM
       // 2. https://www.google.com/maps?q=LAT,LNG
       // 3. https://www.google.com/maps/@LAT,LNG,ZOOM
