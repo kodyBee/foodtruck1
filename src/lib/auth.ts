@@ -11,33 +11,43 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) {
+        try {
+          if (!credentials?.username || !credentials?.password) {
+            console.error('Missing credentials');
+            return null;
+          }
+
+          const adminUsername = process.env.ADMIN_USERNAME;
+          const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+
+          if (!adminUsername || !adminPasswordHash) {
+            console.error('Admin credentials not configured in environment variables');
+            console.error('ADMIN_USERNAME exists:', !!adminUsername);
+            console.error('ADMIN_PASSWORD_HASH exists:', !!adminPasswordHash);
+            return null;
+          }
+
+          if (credentials.username !== adminUsername) {
+            console.error('Username mismatch');
+            return null;
+          }
+
+          const isValidPassword = await compare(credentials.password, adminPasswordHash);
+
+          if (!isValidPassword) {
+            console.error('Password validation failed');
+            return null;
+          }
+
+          return {
+            id: '1',
+            name: 'Admin',
+            email: 'admin@crownmajestic.com',
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           return null;
         }
-
-        const adminUsername = process.env.ADMIN_USERNAME;
-        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
-
-        if (!adminUsername || !adminPasswordHash) {
-          console.error('Admin credentials not configured');
-          return null;
-        }
-
-        if (credentials.username !== adminUsername) {
-          return null;
-        }
-
-        const isValidPassword = await compare(credentials.password, adminPasswordHash);
-
-        if (!isValidPassword) {
-          return null;
-        }
-
-        return {
-          id: '1',
-          name: 'Admin',
-          email: 'admin@crownmajestic.com',
-        };
       },
     }),
   ],
