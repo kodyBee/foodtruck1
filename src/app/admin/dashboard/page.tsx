@@ -161,7 +161,7 @@ export default function AdminDashboard() {
           const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(link)}`);
           if (response.ok) {
             const data = await response.json();
-            console.log('Resolved data:', data);
+            console.log('[AdminDashboard] API response for maps link:', data);
             
             // If API returned parsed coordinates and place name, use them directly
             if (data.lat && data.lng) {
@@ -169,17 +169,19 @@ export default function AdminDashboard() {
               if (data.placeName && !address) {
                 setAddress(data.placeName);
               }
+              console.log('[AdminDashboard] Using lat/lng from API:', data.lat, data.lng);
               return { lat: data.lat.toString(), lng: data.lng.toString() };
             }
             
             // Fall back to parsing the resolved URL
             if (data.resolvedUrl) {
               urlToCheck = data.resolvedUrl;
+              console.log('[AdminDashboard] Falling back to resolvedUrl:', urlToCheck);
             }
           }
         } catch (e) {
           // If resolution fails, try to parse the original link anyway
-          console.error('Failed to resolve short link:', e);
+          console.error('[AdminDashboard] Failed to resolve short link:', e);
         }
       }
 
