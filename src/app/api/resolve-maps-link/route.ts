@@ -37,6 +37,7 @@ export async function GET(request: Request) {
       console.log('[resolve-maps-link] Extracted placeName:', placeName);
     }
 
+
     // Extract coordinates from data parameters
     const latMatch = resolvedUrl.match(/!3d(-?\d+\.\d+)/);
     const lngMatch = resolvedUrl.match(/!4d(-?\d+\.\d+)/);
@@ -47,6 +48,25 @@ export async function GET(request: Request) {
     if (lngMatch) {
       lng = parseFloat(lngMatch[1]);
       console.log('[resolve-maps-link] Extracted lng:', lng);
+    }
+
+    // If coordinates are missing but placeName is available, use Google Geocoding API
+    if ((!lat || !lng) && placeName) {
+      try {
+        const apiKey = "AIzaSyB2Le7CZu6DgENeLQczIlQr-bIedFpSZ7w";
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(placeName)}&key=${apiKey}`;
+        const geoRes = await fetch(geocodeUrl);
+        const geoData = await geoRes.json();
+        if (geoData.status === "OK" && geoData.results.length > 0) {
+          lat = geoData.results[0].geometry.location.lat;
+          lng = geoData.results[0].geometry.location.lng;
+          console.log('[resolve-maps-link] Geocoded lat/lng:', lat, lng);
+        } else {
+          console.warn('[resolve-maps-link] Geocoding failed:', geoData.status, geoData.error_message);
+        }
+      } catch (geoError) {
+        console.error('[resolve-maps-link] Geocoding error:', geoError);
+      }
     }
 
     console.log('[resolve-maps-link] Returning:', { resolvedUrl, placeName, lat, lng });
