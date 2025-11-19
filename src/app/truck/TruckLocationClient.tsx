@@ -13,15 +13,38 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   const [schedule, setSchedule] = useState<WeeklySchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<{ address: string; lat?: number; lng?: number } | null>(null);
+  
   const addToCalendar = (event: TruckEvent) => {
-  const startTime = new Date(event.date).toISOString().replace(/-|:|\.\d\d\d/g, "");
-  // Assume 2 hour duration if not specified
-  const endTime = new Date(new Date(event.date).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
-  
-  const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title + " @ Crown Majestic Kitchen")}&dates=${startTime}/${endTime}&details=${encodeURIComponent(event.description || "")}&location=${encodeURIComponent(event.location)}`;
-  
-  window.open(url, '_blank');
-};
+    const eventDate = new Date(event.date);
+    
+    // If event has a time, parse it and set it on the date
+    if (event.time) {
+      const [hours, minutes] = event.time.split(':').map(part => {
+        // Handle formats like "11:00 AM" or "11:00"
+        const cleaned = part.replace(/[^\d]/g, '');
+        return parseInt(cleaned, 10);
+      });
+      
+      // Check if it's PM
+      const isPM = event.time.toLowerCase().includes('pm') && hours !== 12;
+      const isAM = event.time.toLowerCase().includes('am') && hours === 12;
+      
+      eventDate.setHours(isPM ? hours + 12 : (isAM ? 0 : hours));
+      eventDate.setMinutes(minutes || 0);
+    } else {
+      // Default to 11:00 AM if no time specified
+      eventDate.setHours(11, 0, 0, 0);
+    }
+    
+    const startTime = eventDate.toISOString().replace(/-|:|\.\d+/g, "");
+    // Assume 2 hour duration
+    const endDate = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000);
+    const endTime = endDate.toISOString().replace(/-|:|\.\d+/g, "");
+    
+    const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title + " @ Crown Majestic Kitchen")}&dates=${startTime}/${endTime}&details=${encodeURIComponent(event.description || "Visit us at Crown Majestic Kitchen!")}&location=${encodeURIComponent(event.location)}`;
+    
+    window.open(url, '_blank');
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,15 +84,105 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   
   // Use selected location if available, otherwise use current truck location
   const displayLocation = selectedLocation || location;
-  const mapQuery = displayLocation.lat && displayLocation.lng 
-    ? `${displayLocation.lat},${displayLocation.lng}`
-    : encodeURIComponent(displayLocation.address);
-  const mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${mapQuery}&zoom=15`;
+  
+  // For embed URL, use coordinates if available, otherwise use search mode with address
+  let mapEmbedUrl: string;
+  if (displayLocation.lat && displayLocation.lng) {
+    mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${displayLocation.lat},${displayLocation.lng}&zoom=15`;
+  } else {
+    // Use search mode which is more flexible with address strings
+    mapEmbedUrl = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(displayLocation.address)}&zoom=15`;
+  }
+  
+  console.log('Display location:', displayLocation);
+  console.log('Map embed URL:', mapEmbedUrl);
+  
   const directionsUrl = displayLocation.lat && displayLocation.lng
     ? `https://www.google.com/maps/dir/?api=1&destination=${displayLocation.lat},${displayLocation.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation.address)}`;
 
-  const handleLocationClick = (locationAddress: string) => {
+  const handleLocationClick = async (locationAddress: string) => {
+    console.log('Location clicked:', locationAddress);
+    
+    // Check if it's a Google Maps short link
+    if (locationAddress.includes('maps.app.goo.gl') || locationAddress.includes('goo.gl')) {
+      try {
+        const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(locationAddress)}`);
+        const data = await response.json();
+        console.log('Resolved URL data:', data);
+        
+        if (data.resolvedUrl) {
+          // Extract coordinates or place info from the resolved URL
+          const urlObj = new URL(data.resolvedUrl);
+          console.log('Parsed URL:', urlObj.href);
+          
+          // First, try to get the actual place coordinates from the data parameter (more accurate)
+          // Format: !3d30.4209052!4d-81.6969373 (latitude and longitude)
+          const dataParam = urlObj.pathname + urlObj.search;
+          const latMatch = dataParam.match(/!3d(-?\d+\.\d+)/);
+          const lngMatch = dataParam.match(/!4d(-?\d+\.\d+)/);
+          
+          if (latMatch && lngMatch) {
+            const newLocation = {
+              address: locationAddress,
+              lat: parseFloat(latMatch[1]),
+              lng: parseFloat(lngMatch[1])
+            };
+            console.log('Setting location with coordinates from data params:', newLocation);
+            setSelectedLocation(newLocation);
+            return;
+          }
+          
+          // Fallback: Try to extract coordinates from various Google Maps URL formats
+          // Format: /maps/place/.../@lat,lng,zoom
+          const pathMatch = urlObj.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (pathMatch) {
+            const newLocation = {
+              address: locationAddress,
+              lat: parseFloat(pathMatch[1]),
+              lng: parseFloat(pathMatch[2])
+            };
+            console.log('Setting location with coordinates from path:', newLocation);
+            setSelectedLocation(newLocation);
+            return;
+          }
+          
+          // Format: ?q=lat,lng
+          const qParam = urlObj.searchParams.get('q');
+          if (qParam) {
+            const coordMatch = qParam.match(/(-?\d+\.\d+),(-?\d+\.\d+)/);
+            if (coordMatch) {
+              const newLocation = {
+                address: qParam,
+                lat: parseFloat(coordMatch[1]),
+                lng: parseFloat(coordMatch[2])
+              };
+              console.log('Setting location with coordinates from q param:', newLocation);
+              setSelectedLocation(newLocation);
+              return;
+            }
+            // If q parameter exists but isn't coordinates, use it as address
+            console.log('Setting location with q param address:', qParam);
+            setSelectedLocation({ address: qParam });
+            return;
+          }
+          
+          // Try to extract place name from URL
+          const placeMatch = urlObj.pathname.match(/\/maps\/place\/([^/@]+)/);
+          if (placeMatch) {
+            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+            console.log('Setting location with place name:', placeName);
+            setSelectedLocation({ address: placeName });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error resolving maps link:', error);
+      }
+    }
+    
+    // Default: just use the address as-is
+    console.log('Setting location as-is:', locationAddress);
     setSelectedLocation({ address: locationAddress });
   };
 
@@ -113,7 +226,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
             <h3 className="text-3xl font-bold text-primary mb-4">
               {selectedLocation ? 'Selected Location' : 'Current Location'}
             </h3>
-            <p className="text-yellow-500 text-xl mb-2">📍 {displayLocation.address}</p>
+            <p className="text-yellow-500 text-xl mb-2 break-all">📍 {displayLocation.address}</p>
             {selectedLocation && (
               <button
                 onClick={() => setSelectedLocation(null)}
@@ -144,6 +257,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
           <div className="mb-8">
             <div className="relative w-full h-[400px] sm:h-[500px] border-4 border-yellow-600/30 overflow-hidden">
               <iframe
+                key={mapEmbedUrl}
                 title="Crown Majestic Kitchen Location Map"
                 src={mapEmbedUrl}
                 width="100%"
@@ -184,29 +298,38 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                   ))
                 ) : thisWeekEvents.length > 0 ? (
                   thisWeekEvents.map((event) => (
-                    <div key={event.id} className="border-b border-yellow-600/10 pb-2 last:border-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold">{event.title}</div>
-                          <div className="text-sm text-gray-400">
-                            {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
-                          </div>
-                          <button
-                            onClick={() => handleLocationClick(event.location)}
-                            className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
-                          >
-                          {event.location}
-                          </button>
-                          {event.description && (
-                            <div className="text-xs text-gray-400 mt-1">{event.description}</div>
+                    <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
+                      <div className="space-y-2">
+                        <div className="font-bold text-lg text-yellow-500">{event.title}</div>
+                        <div className="text-sm text-gray-400 flex items-center gap-2">
+                          <span>🗓️</span>
+                          <span>{new Date(event.date).toLocaleDateString()}</span>
+                          {event.time && (
+                            <>
+                              <span>•</span>
+                              <span>🕐 {event.time}</span>
+                            </>
                           )}
                         </div>
+                        <button
+                          onClick={() => handleLocationClick(event.location)}
+                          className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
+                        >
+                          <span>📍</span>
+                          <span className="underline decoration-dotted">
+                            {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
+                          </span>
+                        </button>
+                        {event.description && (
+                          <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
+                        )}
                         <button 
                           onClick={() => addToCalendar(event)}
-                          className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded hover:bg-yellow-500/20 transition-colors"
+                          className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
                           title="Add to Google Calendar"
                         >
-                          📅 Save
+                          <span>📅</span>
+                          <span>Add to Calendar</span>
                         </button>
                       </div>
                     </div>
@@ -222,29 +345,38 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
               <div className="space-y-3 text-muted">
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event) => (
-                    <div key={event.id} className="border-b border-yellow-600/10 pb-2 last:border-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold">{event.title}</div>
-                          <div className="text-sm text-gray-400">
-                            {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
-                          </div>
-                          <button
-                            onClick={() => handleLocationClick(event.location)}
-                            className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
-                          >
-                            📍 {event.location}
-                          </button>
-                          {event.description && (
-                            <div className="text-xs text-gray-400 mt-1">{event.description}</div>
+                    <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
+                      <div className="space-y-2">
+                        <div className="font-bold text-lg text-yellow-500">{event.title}</div>
+                        <div className="text-sm text-gray-400 flex items-center gap-2">
+                          <span>🗓️</span>
+                          <span>{new Date(event.date).toLocaleDateString()}</span>
+                          {event.time && (
+                            <>
+                              <span>•</span>
+                              <span>🕐 {event.time}</span>
+                            </>
                           )}
                         </div>
+                        <button
+                          onClick={() => handleLocationClick(event.location)}
+                          className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
+                        >
+                          <span>📍</span>
+                          <span className="underline decoration-dotted">
+                            {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
+                          </span>
+                        </button>
+                        {event.description && (
+                          <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
+                        )}
                         <button 
                           onClick={() => addToCalendar(event)}
-                          className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded hover:bg-yellow-500/20 transition-colors"
+                          className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
                           title="Add to Google Calendar"
                         >
-                          📅 Save
+                          <span>📅</span>
+                          <span>Add to Calendar</span>
                         </button>
                       </div>
                     </div>
