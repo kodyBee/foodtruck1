@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { dataStore } from '@/lib/dataStore';
 
 export async function GET() {
-  const events = dataStore.getEvents();
+  const events = await dataStore.getEvents();
   return NextResponse.json(events);
 }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const event = dataStore.addEvent({ title, date, time, location, description, type });
+    const event = await dataStore.addEvent({ title, date, time, location, description, type });
     return NextResponse.json(event);
   } catch (error) {
     return NextResponse.json(
@@ -54,7 +54,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const event = dataStore.updateEvent(id, updates);
+    const event = await dataStore.updateEvent(id, updates);
     
     if (!event) {
       return NextResponse.json(
@@ -90,7 +90,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const success = dataStore.deleteEvent(id);
+    const success = await dataStore.deleteEvent(id);
     
     if (!success) {
       return NextResponse.json(

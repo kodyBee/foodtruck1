@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model TruckLocation {
+  id        String   @id @default(cuid())
+  lat       Float
+  lng       Float
+  address   String
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  date        DateTime
+  time        String?
+  location    String
+  description String?
+  type        String   // "this-week" or "upcoming"
+  createdAt   DateTime @default(now())
+}
+
+model WeeklySchedule {
+  id       String  @id @default(cuid())
+  day      String  @unique
+  location String?
+  time     String?
+  notes    String?
+  order    Int     @default(0) // 0=Monday, 6=Sunday
+}
+
+model MenuItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       String?
+  category    String   // "main", "side", "drink"
+  available   Boolean  @default(true)
+}

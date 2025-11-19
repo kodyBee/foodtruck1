@@ -9,6 +9,15 @@ export default function TruckLocationClient() {
   const [schedule, setSchedule] = useState<WeeklySchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<{ address: string; lat?: number; lng?: number } | null>(null);
+  const addToCalendar = (event: TruckEvent) => {
+  const startTime = new Date(event.date).toISOString().replace(/-|:|\.\d\d\d/g, "");
+  // Assume 2 hour duration if not specified
+  const endTime = new Date(new Date(event.date).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
+  
+  const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title + " @ Crown Majestic Kitchen")}&dates=${startTime}/${endTime}&details=${encodeURIComponent(event.description || "")}&location=${encodeURIComponent(event.location)}`;
+  
+  window.open(url, '_blank');
+};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,6 +93,8 @@ export default function TruckLocationClient() {
   const upcomingEvents = categorizedEvents.filter(e => e.type === 'upcoming');
 
   return (
+    
+    
     <section className="relative py-32 px-4 sm:px-6 lg:px-8 truck-section-bg">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
@@ -172,19 +183,30 @@ export default function TruckLocationClient() {
                 ) : thisWeekEvents.length > 0 ? (
                   thisWeekEvents.map((event) => (
                     <div key={event.id} className="border-b border-yellow-600/10 pb-2 last:border-0">
-                      <div className="font-semibold">{event.title}</div>
-                      <div className="text-sm text-gray-400">
-                        {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-semibold">{event.title}</div>
+                          <div className="text-sm text-gray-400">
+                            {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
+                          </div>
+                          <button
+                            onClick={() => handleLocationClick(event.location)}
+                            className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
+                          >
+                            📍 {event.location}
+                          </button>
+                          {event.description && (
+                            <div className="text-xs text-gray-400 mt-1">{event.description}</div>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => addToCalendar(event)}
+                          className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded hover:bg-yellow-500/20 transition-colors"
+                          title="Add to Google Calendar"
+                        >
+                          📅 Save
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleLocationClick(event.location)}
-                        className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
-                      >
-                        📍 {event.location}
-                      </button>
-                      {event.description && (
-                        <div className="text-xs text-gray-400 mt-1">{event.description}</div>
-                      )}
                     </div>
                   ))
                 ) : (
@@ -199,19 +221,30 @@ export default function TruckLocationClient() {
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event) => (
                     <div key={event.id} className="border-b border-yellow-600/10 pb-2 last:border-0">
-                      <div className="font-semibold">{event.title}</div>
-                      <div className="text-sm text-gray-400">
-                        {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-semibold">{event.title}</div>
+                          <div className="text-sm text-gray-400">
+                            {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
+                          </div>
+                          <button
+                            onClick={() => handleLocationClick(event.location)}
+                            className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
+                          >
+                            📍 {event.location}
+                          </button>
+                          {event.description && (
+                            <div className="text-xs text-gray-400 mt-1">{event.description}</div>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => addToCalendar(event)}
+                          className="text-xs bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded hover:bg-yellow-500/20 transition-colors"
+                          title="Add to Google Calendar"
+                        >
+                          📅 Save
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleLocationClick(event.location)}
-                        className="text-sm hover:text-yellow-500 transition-all underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
-                      >
-                        📍 {event.location}
-                      </button>
-                      {event.description && (
-                        <div className="text-xs text-gray-400 mt-1">{event.description}</div>
-                      )}
                     </div>
                   ))
                 ) : (

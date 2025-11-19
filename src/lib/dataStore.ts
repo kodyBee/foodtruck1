@@ -1,86 +1,88 @@
-// In-memory storage for demo (replace with database in production)
-interface StorageData {
-  location: {
-    lat: number;
-    lng: number;
-    address: string;
-    updatedAt: string;
-  };
-  events: Array<{
-    id: string;
-    title: string;
-    date: string;
-    time?: string;
-    location: string;
-    description?: string;
-    type: 'this-week' | 'upcoming';
-  }>;
-  schedule: Array<{
-    day: string;
-    location?: string;
-    time?: string;
-    notes?: string;
-  }>;
-}
+import { prisma } from '@/lib/db';
 
-// Initialize with default data
-let storage: StorageData = {
-  location: {
-    lat: Number(process.env.NEXT_PUBLIC_TRUCK_LAT) || 40.7128,
-    lng: Number(process.env.NEXT_PUBLIC_TRUCK_LNG) || -74.0060,
-    address: process.env.NEXT_PUBLIC_TRUCK_ADDRESS || "New York, NY",
-    updatedAt: new Date().toISOString(),
-  },
-  events: [],
-  schedule: [],
-};
+// Helper to format dates for your frontend components
+const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
 export const dataStore = {
-  getLocation: () => storage.location,
-  
-  updateLocation: (lat: number, lng: number, address: string) => {
-    storage.location = {
-      lat,
-      lng,
-      address,
-      updatedAt: new Date().toISOString(),
+  getLocation: async () => {
+    // Get the most recently updated location
+    const location = await prisma.truckLocation.findFirst({
+      orderBy: { updatedAt: 'desc' }
+    });
+    return location || { 
+      lat: 40.7128, 
+      lng: -74.0060, 
+      address: "Default Location", 
+      updatedAt: new Date() 
     };
-    return storage.location;
   },
-
-  getEvents: () => storage.events,
   
-  addEvent: (event: Omit<StorageData['events'][0], 'id'>) => {
-    const newEvent = {
-      ...event,
-      id: Date.now().toString(),
-    };
-    storage.events.push(newEvent);
-    return newEvent;
+  updateLocation: async (lat: number, lng: number, address: string) => {
+    return await prisma.truckLocation.create({
+      data: { lat, lng, address }
+    });
   },
 
-  updateEvent: (id: string, event: Partial<StorageData['events'][0]>) => {
-    const index = storage.events.findIndex(e => e.id === id);
-    if (index !== -1) {
-      storage.events[index] = { ...storage.events[index], ...event };
-      return storage.events[index];
-    }
-    return null;
+  getEvents: async () => {
+    const events = await prisma.event.findMany({
+      orderBy: { date: 'asc' }
+    });
+    return events.map((e: any) => ({
+      ...e,
+      date: formatDate(e.date) // Convert DateTime to string YYYY-MM-DD
+    }));
+  },
+  
+  addEvent: async (event: any) => {
+    return await prisma.event.create({
+      data: {
+        ...event,
+        date: new Date(event.date)
+      }
+    });
   },
 
-  deleteEvent: (id: string) => {
-    const index = storage.events.findIndex(e => e.id === id);
-    if (index !== -1) {
-      storage.events.splice(index, 1);
+  updateEvent: async (id: string, event: any) => {
+    const data = { ...event };
+    if (data.date) data.date = new Date(data.date);
+    
+    return await prisma.event.update({
+      where: { id },
+      data
+    });
+  },
+
+  deleteEvent: async (id: string) => {
+    try {
+      await prisma.event.delete({ where: { id } });
       return true;
+    } catch (e) {
+      return false;
     }
-    return false;
   },
 
-  getSchedule: () => storage.schedule,
+  getSchedule: async () => {
+    return await prisma.weeklySchedule.findMany({
+      orderBy: { order: 'asc' }
+    });
+  },
   
-  updateSchedule: (schedule: StorageData['schedule']) => {
-    storage.schedule = schedule;
-    return storage.schedule;
+  updateSchedule: async (schedule: any[]) => {
+    // Transaction to update all days
+    const updates = schedule.map(day => 
+      prisma.weeklySchedule.upsert({
+        where: { day: day.day },
+        update: { location: day.location, time: day.time, notes: day.notes },
+        create: { 
+          day: day.day, 
+          location: day.location, 
+          time: day.time, 
+          notes: day.notes,
+          order: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].indexOf(day.day)
+        }
+      })
+    );
+    await prisma.$transaction(updates);
+    return schedule;
   },
 };

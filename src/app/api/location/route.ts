@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { dataStore } from '@/lib/dataStore';
 
 export async function GET() {
-  const location = dataStore.getLocation();
+  const location = await dataStore.getLocation();
   return NextResponse.json(location);
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const location = dataStore.updateLocation(lat, lng, address);
+    const location = await dataStore.updateLocation(lat, lng, address);
     return NextResponse.json(location);
   } catch (error) {
     return NextResponse.json(

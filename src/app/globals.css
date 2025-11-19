@@ -129,7 +129,7 @@ body {
 
 /* Truck page specific styles */
 .truck-page-bg {
-  background: linear-gradient(to bottom, #000000, #404040, #525252);
+  background: #000000;
 }
 
 [data-theme="light"] .truck-page-bg {
@@ -137,7 +137,7 @@ body {
 }
 
 .truck-section-bg {
-  background-color: #404040;
+  background-color: #000000;
 }
 
 [data-theme="light"] .truck-section-bg {
@@ -145,7 +145,7 @@ body {
 }
 
 .truck-main-card {
-  background-color: #404040;
+  background-color: #171717;
 }
 
 [data-theme="light"] .truck-main-card {
@@ -153,7 +153,7 @@ body {
 }
 
 .truck-schedule-card {
-  background-color: #262626;
+  background-color: #171717;
 }
 
 [data-theme="light"] .truck-schedule-card {
@@ -162,7 +162,7 @@ body {
 
 /* Contact page specific styles */
 .contact-page-bg {
-  background: linear-gradient(to bottom, #000000, #404040, #525252);
+  background: #000000;
 }
 
 [data-theme="light"] .contact-page-bg {
@@ -170,7 +170,7 @@ body {
 }
 
 .contact-section-bg {
-  background-color: #171717;
+  background-color: #000000;
 }
 
 [data-theme="light"] .contact-section-bg {
@@ -178,7 +178,7 @@ body {
 }
 
 .contact-form-card {
-  background-color: #262626;
+  background-color: #171717;
 }
 
 [data-theme="light"] .contact-form-card {
@@ -197,7 +197,7 @@ body {
 
 /* Menu page specific styles */
 .menu-page-bg {
-  background: linear-gradient(to bottom, #000000, #404040, #525252);
+  background: #000000;
 }
 
 [data-theme="light"] .menu-page-bg {
@@ -205,7 +205,7 @@ body {
 }
 
 .menu-section-bg {
-  background-color: #525252;
+  background-color: #000000;
 }
 
 [data-theme="light"] .menu-section-bg {

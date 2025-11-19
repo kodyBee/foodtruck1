@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { dataStore } from '@/lib/dataStore';
 
 export async function GET() {
-  const schedule = dataStore.getSchedule();
+  const schedule = await dataStore.getSchedule();
   return NextResponse.json(schedule);
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const updatedSchedule = dataStore.updateSchedule(schedule);
+    const updatedSchedule = await dataStore.updateSchedule(schedule);
     return NextResponse.json(updatedSchedule);
   } catch (error) {
     return NextResponse.json(

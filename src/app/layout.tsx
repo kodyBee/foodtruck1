@@ -76,6 +76,31 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dancingScript.variable} antialiased`}
       >
+        <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FoodEstablishment",
+      "name": "Crown Majestic Kitchen",
+      "image": [
+        `${process.env.NEXT_PUBLIC_SITE_URL}/truckpic2.jpg`,
+        `${process.env.NEXT_PUBLIC_SITE_URL}/Crown Logo.png`
+      ],
+      "description": "Experience gourmet street food with crown-worthy presentation.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Your City",
+        "addressRegion": "Your State",
+        "addressCountry": "US"
+      },
+      "priceRange": "$$",
+      "servesCuisine": "American, Gourmet Street Food",
+      "telephone": "+15551234567",
+      "url": process.env.NEXT_PUBLIC_SITE_URL
+    })
+  }}
+/>
         <ThemeProvider>
           {children}
         </ThemeProvider>
