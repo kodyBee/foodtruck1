@@ -259,8 +259,6 @@ export default function AdminDashboard() {
         // If lat/lng are missing but placeName is present, set address to placeName
         if (!data.lat && !data.lng && data.placeName) {
           apiAddress = data.placeName;
-          apiLat = '';
-          apiLng = '';
           setAddress(data.placeName);
           setLat('');
           setLng('');
@@ -281,8 +279,8 @@ export default function AdminDashboard() {
         setLat(parsed.lat);
         setLng(parsed.lng);
       }
-      // Only show error if both address and coordinates are missing
-      if (!apiAddress && !apiLat && !apiLng) {
+      // Only show error if address is missing
+      if (!apiAddress || apiAddress.trim() === '') {
         setMessage('Invalid Google Maps link. Please check the URL and try again.');
         setLoading(false);
         return;
