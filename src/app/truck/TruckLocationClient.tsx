@@ -113,32 +113,50 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
         
         if (data.resolvedUrl) {
           // Extract coordinates or place info from the resolved URL
-          const urlObj = new URL(data.resolvedUrl);
-          console.log('Parsed URL:', urlObj.href);
+          const fullUrl = data.resolvedUrl;
+          console.log('Full resolved URL:', fullUrl);
           
-          // First, try to get the actual place coordinates from the data parameter (more accurate)
+          // First, try to extract place name from the URL path
+          // Format: /maps/place/Place+Name,Address/...
+          const placeMatch = fullUrl.match(/\/maps\/place\/([^\/]+)/);
+          let placeName = '';
+          if (placeMatch) {
+            placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+            console.log('Extracted place name:', placeName);
+          }
+          
+          // Try to extract coordinates from the data parameter
           // Format: !3d30.4209052!4d-81.6969373 (latitude and longitude)
-          const dataParam = urlObj.pathname + urlObj.search;
-          const latMatch = dataParam.match(/!3d(-?\d+\.\d+)/);
-          const lngMatch = dataParam.match(/!4d(-?\d+\.\d+)/);
+          const latMatch = fullUrl.match(/!3d(-?\d+\.\d+)/);
+          const lngMatch = fullUrl.match(/!4d(-?\d+\.\d+)/);
           
           if (latMatch && lngMatch) {
             const newLocation = {
-              address: locationAddress,
+              address: placeName || locationAddress,
               lat: parseFloat(latMatch[1]),
               lng: parseFloat(lngMatch[1])
             };
-            console.log('Setting location with coordinates from data params:', newLocation);
+            console.log('Setting location with coordinates:', newLocation);
             setSelectedLocation(newLocation);
+            return;
+          }
+          
+          // Try to extract from hex-encoded coordinates in the path
+          // Some URLs use format: 0xHEX:0xHEX which represents lat/lng
+          const hexMatch = fullUrl.match(/0x([0-9a-f]+):0x([0-9a-f]+)/i);
+          if (hexMatch && placeName) {
+            // Use place name for search if we can't decode hex coordinates
+            console.log('Using place name for search:', placeName);
+            setSelectedLocation({ address: placeName });
             return;
           }
           
           // Fallback: Try to extract coordinates from various Google Maps URL formats
           // Format: /maps/place/.../@lat,lng,zoom
-          const pathMatch = urlObj.pathname.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          const pathMatch = fullUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
           if (pathMatch) {
             const newLocation = {
-              address: locationAddress,
+              address: placeName || locationAddress,
               lat: parseFloat(pathMatch[1]),
               lng: parseFloat(pathMatch[2])
             };
@@ -148,6 +166,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
           }
           
           // Format: ?q=lat,lng
+          const urlObj = new URL(fullUrl);
           const qParam = urlObj.searchParams.get('q');
           if (qParam) {
             const coordMatch = qParam.match(/(-?\d+\.\d+),(-?\d+\.\d+)/);
@@ -167,10 +186,8 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
             return;
           }
           
-          // Try to extract place name from URL
-          const placeMatch = urlObj.pathname.match(/\/maps\/place\/([^/@]+)/);
-          if (placeMatch) {
-            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+          // If we extracted a place name, use it
+          if (placeName) {
             console.log('Setting location with place name:', placeName);
             setSelectedLocation({ address: placeName });
             return;
