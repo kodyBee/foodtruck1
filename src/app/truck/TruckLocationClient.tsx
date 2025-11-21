@@ -177,10 +177,21 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   // Reorder schedule to start from today
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = now.getDay(); // 0-6, where 0 is Sunday
-  const reorderedSchedule = [
-    ...schedule.slice(today),
-    ...schedule.slice(0, today)
-  ];
+  const todayDayName = daysOfWeek[today];
+  
+  // Sort schedule to start from today
+  const reorderedSchedule = schedule
+    .slice()
+    .sort((a, b) => {
+      const aIndex = daysOfWeek.indexOf(a.day);
+      const bIndex = daysOfWeek.indexOf(b.day);
+      
+      // Calculate days from today (0 = today, 1 = tomorrow, etc.)
+      const aDaysFromToday = (aIndex - today + 7) % 7;
+      const bDaysFromToday = (bIndex - today + 7) % 7;
+      
+      return aDaysFromToday - bDaysFromToday;
+    });
 
   return (
     
