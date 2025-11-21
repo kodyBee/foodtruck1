@@ -217,11 +217,11 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
               </h4>
               <div className="space-y-4">
                 {thisWeekEvents.length > 0 ? (
-                  thisWeekEvents.map((event) => (
+                  thisWeekEvents.map((event, index) => (
                     <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
                       <div className="flex flex-col items-center w-full">
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                          {index === 0 ? 'Today' : new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                         <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
                         <div className="text-xl font-bold glass-text-subheading text-center mb-2">
@@ -238,13 +238,23 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                       {event.description && (
                         <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
                       )}
-                      <button
-                        onClick={() => handleLocationClick(event.location)}
-                        className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                      >
-                        
-                        <span>Show on map</span>
-                      </button>
+                      {index === 0 ? (
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                        >
+                          <span>Get Directions</span>
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => handleLocationClick(event.location)}
+                          className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                        >
+                          <span>Show on map</span>
+                        </button>
+                      )}
                       <button 
                         onClick={() => addToCalendar(event)}
                         className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
@@ -257,14 +267,14 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                   </div>
                   ))
                 ) : reorderedSchedule.length > 0 ? (
-                  reorderedSchedule.map((day) => (
+                  reorderedSchedule.map((day, index) => (
                     <div
                       key={day.day}
                       className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300"
                     >
                       <div className="flex flex-col items-center w-full">
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {day.day.slice(0,3)}
+                          {index === 0 ? 'Today' : day.day.slice(0,3)}
                         </div>
                         <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
                         <div className="text-xl font-bold glass-text-subheading text-center mb-2">
@@ -279,13 +289,25 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                           <div className="text-sm glass-text-body italic mb-2">{day.notes}</div>
                         )}
                         {day.location && (
-                          <button
-                            onClick={() => handleLocationClick(day.location!)}
-                            className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                          >
-                            
-                            <span>Show on map</span>
-                          </button>
+                          <>
+                            {index === 0 ? (
+                              <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(day.location)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                              >
+                                <span>Get Directions</span>
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => handleLocationClick(day.location!)}
+                                className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                              >
+                                <span>Show on map</span>
+                              </button>
+                            )}
+                          </>
                         )}
                         {!day.location && (
                           <div className="text-sm text-gray-500 mt-2">Check back for updates</div>
@@ -340,42 +362,6 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
             </div>
             {/* Map and Location Info */}
             <div className="md:w-1/2 w-full flex flex-col gap-8">
-              <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-8">
-                <div className="flex flex-col items-center w-full">
-                  <div className="text-2xl font-extrabold glass-text-heading mb-3">
-                    <span>{selectedLocation ? 'Selected Location' : 'Current Location'}</span>
-                  </div>
-                  <div className="w-20 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-4 shadow-yellow-700/40 shadow"></div>
-                  <div className="text-xl font-bold glass-text-subheading text-center mb-4 break-all flex items-center gap-2">
-
-                    <span>{displayLocation.address}</span>
-                  </div>
-                  {selectedLocation && (
-                    <button
-                      onClick={() => setSelectedLocation(null)}
-                      className="glass-text-heading hover:opacity-80 text-sm mb-4 underline hover:scale-105 transition-all cursor-pointer underline-offset-2 font-semibold"
-                    >
-                      ← Back to current location
-                    </button>
-                  )}
-                  <p className="glass-text-muted text-center mb-6 text-sm">
-                    {selectedLocation 
-                      ? 'Click locations below to view them on the map'
-                      : 'Follow us on social media for real-time location updates and schedule announcements'
-                    }
-                  </p>
-                  {/* Get Directions Button */}
-                  <a
-                    href={directionsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-8 py-3 rounded-full glass-button text-black font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                  >
-                    
-                    <span>Get Directions</span>
-                  </a>
-                </div>
-              </div>
               {/* Google Maps Embed */}
               <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-4">
                 <div className="relative w-full h-[400px] sm:h-[500px] overflow-hidden rounded-2xl border-2 glass-card-border">
