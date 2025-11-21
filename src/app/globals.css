@@ -180,27 +180,27 @@ body {
 }
 
 .glass-text-heading {
-  color: #facc15;
+  color: #ffffff;
 }
 
 [data-theme="light"] .glass-text-heading {
-  color: #ca8a04;
+  color: #000000;
 }
 
 .glass-text-subheading {
-  color: #fde047;
+  color: #ffffff;
 }
 
 [data-theme="light"] .glass-text-subheading {
-  color: #1f2937;
+  color: #000000;
 }
 
 .glass-text-body {
-  color: #fef08a;
+  color: #ffffff;
 }
 
 [data-theme="light"] .glass-text-body {
-  color: #fde047;
+  color: #000000;
 }
 
 .glass-text-muted {

@@ -211,7 +211,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
           <div className="flex flex-col-reverse md:flex-row gap-10 items-start">
             {/* Upcoming Events Table */}
             <div className="md:w-1/2 w-full">
-              <h4 className="text-2xl font-extrabold text-yellow-400 mb-6 flex items-center gap-2">
+              <h4 className="text-2xl font-extrabold text-black dark:text-white mb-6 flex items-center gap-2">
                 <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
                 <span>Upcoming Events</span>
               </h4>
@@ -223,7 +223,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
                           {index === 0 ? 'Today' : new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
-                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
                         <div className="text-xl font-bold glass-text-subheading text-center mb-2">
                           {event.title}
                         </div>
@@ -276,7 +276,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
                           {index === 0 ? 'Today' : day.day.slice(0,3)}
                         </div>
-                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
                         <div className="text-xl font-bold glass-text-subheading text-center mb-2">
                           {day.location ? day.location : <span className='text-gray-500 italic'>TBD</span>}
                         </div>
@@ -322,7 +322,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                         <div className="text-4xl font-black text-yellow-400 tracking-widest mb-2 drop-shadow-lg uppercase">
                           {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
-                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
                         <div className="text-xl font-bold text-yellow-200 text-center mb-2">
                           {event.title}
                         </div>
@@ -361,7 +361,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
               </div>
             </div>
             {/* Map and Location Info */}
-            <div className="md:w-1/2 w-full flex flex-col gap-8">
+            <div className="md:w-1/2 w-full flex flex-col gap-8 mt-14">
               {/* Google Maps Embed */}
               <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-4">
                 <div className="relative w-full h-[400px] sm:h-[500px] overflow-hidden rounded-2xl border-2 glass-card-border">
