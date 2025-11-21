@@ -48,6 +48,15 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Logo visibility enhancement */
+.logo-image {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+[data-theme="light"] .logo-image {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4)) brightness(0.85) contrast(1.15);
+}
+
 .bg-nav-mobile {
   background-color: rgba(0, 0, 0, 0.98);
 }
@@ -314,7 +323,7 @@ body {
 }
 
 [data-theme="light"] .home-hero-gradient-overlay {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.6));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.4));
 }
 
 .home-hero-radial-overlay {
@@ -322,7 +331,7 @@ body {
 }
 
 [data-theme="light"] .home-hero-radial-overlay {
-  background: radial-gradient(circle, transparent, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.6));
+  background: radial-gradient(circle, transparent, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4));
 }
 
 .home-section-bg {

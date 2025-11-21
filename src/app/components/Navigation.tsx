@@ -23,7 +23,7 @@ export default function Navigation() {
                 alt="Crown Majestic Logo" 
                 width={180} 
                 height={120}
-                className="relative z-10 object-contain transition-all duration-300 group-hover:scale-110"
+                className="relative z-10 object-contain transition-all duration-300 group-hover:scale-110 logo-image"
                 priority
               />
             </div>
