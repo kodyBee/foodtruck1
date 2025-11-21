@@ -44,17 +44,20 @@ export default function Contact() {
             </p>
           </div>
           
-          <div className="contact-form-card border-4 border-yellow-600/30 p-8 sm:p-12 shadow-2xl">
+          <div className="contact-glass-card glass-card-border shadow-2xl rounded-3xl p-8 sm:p-12">
             {status === 'success' ? (
               <div className="text-center py-12">
-                <h3 className="text-2xl font-bold text-green-500 mb-4">Message Sent! 👑</h3>
-                <p className="text-muted">Thank you for contacting Crown Majestic Kitchen. We will get back to you shortly.</p>
-                <button onClick={() => setStatus('idle')} className="mt-6 text-yellow-500 hover:underline">Send another message</button>
+                <h3 className="text-3xl font-bold glass-text-heading mb-4 flex items-center justify-center gap-2">
+                  <span>Message Sent!</span>
+                  <span className="text-4xl">👑</span>
+                </h3>
+                <p className="glass-text-muted mb-4">Thank you for contacting Crown Majestic Kitchen. We will get back to you shortly.</p>
+                <button onClick={() => setStatus('idle')} className="px-6 py-3 rounded-full glass-button text-black font-bold shadow-lg hover:scale-105 transition-all border border-yellow-400">Send another message</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-bold text-foreground mb-2">
+                  <label htmlFor="name" className="block text-sm font-bold contact-glass-label mb-2">
                     NAME *
                   </label>
                   <input
@@ -62,12 +65,12 @@ export default function Contact() {
                     id="name"
                     name="name"
                     required
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-yellow-600/30 text-foreground focus:border-yellow-500 focus:outline-none"
+                    className="w-full px-4 py-3 contact-glass-input border-2 glass-card-border rounded-xl placeholder:text-gray-500 focus:border-yellow-500 focus:outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-bold text-foreground mb-2">
+                  <label htmlFor="email" className="block text-sm font-bold contact-glass-label mb-2">
                     EMAIL *
                   </label>
                   <input
@@ -75,36 +78,36 @@ export default function Contact() {
                     id="email"
                     name="email"
                     required
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-yellow-600/30 text-foreground focus:border-yellow-500 focus:outline-none"
+                    className="w-full px-4 py-3 contact-glass-input border-2 glass-card-border rounded-xl placeholder:text-gray-500 focus:border-yellow-500 focus:outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-bold text-foreground mb-2">
+                  <label htmlFor="phone" className="block text-sm font-bold contact-glass-label mb-2">
                     PHONE
                   </label>
                   <input
                     type="tel"
                     id="phone"
                     name="phone"
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-yellow-600/30 text-foreground focus:border-yellow-500 focus:outline-none"
+                    className="w-full px-4 py-3 contact-glass-input border-2 glass-card-border rounded-xl placeholder:text-gray-500 focus:border-yellow-500 focus:outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="eventDate" className="block text-sm font-bold text-foreground mb-2">
+                  <label htmlFor="eventDate" className="block text-sm font-bold contact-glass-label mb-2">
                     EVENT DATE (if applicable)
                   </label>
                   <input
                     type="date"
                     id="eventDate"
                     name="eventDate"
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-yellow-600/30 text-foreground focus:border-yellow-500 focus:outline-none"
+                    className="w-full px-4 py-3 contact-glass-input border-2 glass-card-border rounded-xl placeholder:text-gray-500 focus:border-yellow-500 focus:outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-bold text-foreground mb-2">
+                  <label htmlFor="message" className="block text-sm font-bold contact-glass-label mb-2">
                     MESSAGE *
                   </label>
                   <textarea
@@ -112,20 +115,20 @@ export default function Contact() {
                     name="message"
                     required
                     rows={6}
-                    className="w-full px-4 py-3 bg-black/50 border-2 border-yellow-600/30 text-foreground focus:border-yellow-500 focus:outline-none resize-none"
+                    className="w-full px-4 py-3 contact-glass-input border-2 glass-card-border rounded-xl placeholder:text-gray-500 focus:border-yellow-500 focus:outline-none resize-none transition-all"
                   />
                 </div>
                 
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="w-full px-8 py-4 bg-gradient-to-b from-yellow-400 via-yellow-500 to-yellow-600 text-black font-bold text-lg hover:from-yellow-500 hover:to-yellow-700 transition-all transform hover:scale-105 shadow-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-8 py-4 rounded-full glass-button text-black font-bold text-lg shadow-lg hover:scale-105 transition-all border border-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {status === 'loading' ? 'SENDING...' : 'SEND MESSAGE'}
                 </button>
                 
                 {status === 'error' && (
-                  <p className="text-red-500 text-center mt-4">Something went wrong. Please try again.</p>
+                  <p className="text-red-400 text-center mt-4 font-semibold">Something went wrong. Please try again.</p>
                 )}
               </form>
             )}

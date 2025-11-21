@@ -148,11 +148,13 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
 
   // Auto-categorize events based on date
   const now = new Date();
+  now.setHours(0, 0, 0, 0); // Start of today
   const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   
   const categorizedEvents = events.map(event => {
     const eventDate = new Date(event.date);
-    // If event is within the next 7 days, it's "this week"
+    eventDate.setHours(0, 0, 0, 0); // Normalize to start of day
+    // If event is within the next 7 days (including today), it's "this week"
     if (eventDate >= now && eventDate <= oneWeekFromNow) {
       return { ...event, type: 'this-week' as const };
     }
@@ -164,8 +166,21 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     return event;
   });
 
-  const thisWeekEvents = categorizedEvents.filter(e => e.type === 'this-week');
-  const upcomingEvents = categorizedEvents.filter(e => e.type === 'upcoming');
+  // Filter and sort events
+  const thisWeekEvents = categorizedEvents
+    .filter(e => e.type === 'this-week')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+  const upcomingEvents = categorizedEvents
+    .filter(e => e.type === 'upcoming')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+
+  // Reorder schedule to start from today
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = now.getDay(); // 0-6, where 0 is Sunday
+  const reorderedSchedule = [
+    ...schedule.slice(today),
+    ...schedule.slice(0, today)
+  ];
 
   return (
     
@@ -182,168 +197,242 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
         </div>
 
         <div className="truck-main-card border-4 border-yellow-600/30 p-8 sm:p-12">
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold text-primary mb-4">
-              {selectedLocation ? 'Selected Location' : 'Current Location'}
-            </h3>
-            <p className="text-yellow-500 text-xl mb-2 break-all">📍 {displayLocation.address}</p>
-            {selectedLocation && (
-              <button
-                onClick={() => setSelectedLocation(null)}
-                className="text-muted hover:text-yellow-500 text-sm mb-4 underline hover:scale-105 transition-all cursor-pointer underline-offset-2"
-              >
-                ← Back to current location
-              </button>
-            )}
-            <p className="text-muted mb-6">
-              {selectedLocation 
-                ? 'Click locations below to view them on the map'
-                : 'Follow us on social media for real-time location updates and schedule announcements'
-              }
-            </p>
-            
-            {/* Get Directions Button */}
-            <a
-              href={directionsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-8 transition-all duration-300 border-2 border-yellow-500 hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/50 cursor-pointer"
-            >
-              🚗 Get Directions
-            </a>
-          </div>
-
-          {/* Google Maps Embed */}
-          <div className="mb-8">
-            <div className="relative w-full h-[400px] sm:h-[500px] border-4 border-yellow-600/30 overflow-hidden">
-              <iframe
-                key={mapEmbedUrl}
-                title="Crown Majestic Kitchen Location Map"
-                src={mapEmbedUrl}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                className="absolute inset-0"
-                aria-label="Google Map showing food truck location"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
-            <div className="truck-schedule-card p-6 border border-yellow-600/20">
-              <h4 className="text-xl font-bold text-yellow-500 mb-3">This Week</h4>
-              <div className="space-y-3 text-muted">
-                {schedule.length > 0 ? (
-                  schedule.map((day) => (
-                    <div key={day.day} className="border-b border-yellow-600/10 pb-2">
-                      <div className="font-semibold text-yellow-500">{day.day}</div>
-                      {day.location ? (
-                        <>
+          <div className="flex flex-col-reverse md:flex-row gap-10 items-start">
+            {/* Upcoming Events Table */}
+            <div className="md:w-1/2 w-full">
+              <h4 className="text-2xl font-extrabold text-yellow-400 mb-6 flex items-center gap-2">
+                <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
+                <span>Upcoming Events</span>
+              </h4>
+              <div className="space-y-4">
+                {thisWeekEvents.length > 0 ? (
+                  thisWeekEvents.map((event) => (
+                    <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
+                      <div className="flex flex-col items-center w-full">
+                        <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
+                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                        </div>
+                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                          {event.title}
+                        </div>
+                        <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                          <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
+                        </div>
+                        {event.time && (
+                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                            <span className="text-lg">🕒</span> {event.time}
+                          </div>
+                        )}
+                      {event.description && (
+                        <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
+                      )}
+                      <button
+                        onClick={() => handleLocationClick(event.location)}
+                        className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                      >
+                        
+                        <span>Show on map</span>
+                      </button>
+                      <button 
+                        onClick={() => addToCalendar(event)}
+                        className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                        title="Add to Google Calendar"
+                      >
+                        <span>📅</span>
+                        <span>Add to Calendar</span>
+                      </button>
+                    </div>
+                  </div>
+                  ))
+                ) : reorderedSchedule.length > 0 ? (
+                  reorderedSchedule.map((day) => (
+                    <div
+                      key={day.day}
+                      className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300"
+                    >
+                      <div className="flex flex-col items-center w-full">
+                        <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
+                          {day.day.slice(0,3)}
+                        </div>
+                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                          {day.location ? day.location : <span className='text-gray-500 italic'>TBD</span>}
+                        </div>
+                        {day.time && (
+                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                            <span className="text-lg">🕒</span> {day.time}
+                          </div>
+                        )}
+                        {day.notes && (
+                          <div className="text-sm glass-text-body italic mb-2">{day.notes}</div>
+                        )}
+                        {day.location && (
                           <button
                             onClick={() => handleLocationClick(day.location!)}
-                            className="text-sm hover:text-yellow-500 transition-all text-left underline decoration-dotted hover:scale-105 hover:underline-offset-4 cursor-pointer"
+                            className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
                           >
-                            📍 {day.location}
+                            
+                            <span>Show on map</span>
                           </button>
-                          {day.time && <div className="text-sm text-gray-400">{day.time}</div>}
-                          {day.notes && <div className="text-xs text-gray-500 italic">{day.notes}</div>}
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-500">Check back for updates</div>
-                      )}
+                        )}
+                        {!day.location && (
+                          <div className="text-sm text-gray-500 mt-2">Check back for updates</div>
+                        )}
+                      </div>
                     </div>
                   ))
                 ) : thisWeekEvents.length > 0 ? (
                   thisWeekEvents.map((event) => (
-                    <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg text-yellow-500">{event.title}</div>
-                        <div className="text-sm text-gray-400 flex items-center gap-2">
-                          <span>🗓️</span>
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
-                          {event.time && (
-                            <>
-                              <span>•</span>
-                              <span>🕐 {event.time}</span>
-                            </>
-                          )}
+                    <div key={event.id} className="bg-gradient-to-br from-black/80 via-neutral-900/90 to-neutral-950/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center border border-yellow-700/30 hover:shadow-yellow-900/30 transition-all duration-300">
+                      <div className="flex flex-col items-center w-full">
+                        <div className="text-4xl font-black text-yellow-400 tracking-widest mb-2 drop-shadow-lg uppercase">
+                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
-                        <button
-                          onClick={() => handleLocationClick(event.location)}
-                          className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
-                        >
-                          <span>📍</span>
-                          <span className="underline decoration-dotted">
-                            {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
-                          </span>
-                        </button>
-                        {event.description && (
-                          <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
+                        <div className="w-10 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-3 shadow-yellow-700/40 shadow"></div>
+                        <div className="text-xl font-bold text-yellow-200 text-center mb-2">
+                          {event.title}
+                        </div>
+                        <div className="text-md text-yellow-300 flex items-center gap-2 mb-1">
+                           {new Date(event.date).toLocaleDateString()}
+                        </div>
+                        {event.time && (
+                          <div className="text-md text-yellow-300 flex items-center gap-2 mb-1">
+                             {event.time}
+                          </div>
                         )}
-                        <button 
-                          onClick={() => addToCalendar(event)}
-                          className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
-                          title="Add to Google Calendar"
-                        >
-                          <span>📅</span>
-                          <span>Add to Calendar</span>
-                        </button>
                       </div>
+                      {event.description && (
+                        <div className="text-sm text-yellow-500 italic mb-2 text-center">{event.description}</div>
+                      )}
+                      <button
+                        onClick={() => handleLocationClick(event.location)}
+                        className="mt-3 px-6 py-2 rounded-full bg-yellow-600/80 text-black font-bold shadow hover:bg-yellow-500 hover:text-yellow-950 hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                      >
+                       
+                        <span>Show on map</span>
+                      </button>
+                      <button 
+                        onClick={() => addToCalendar(event)}
+                        className="mt-3 px-6 py-2 rounded-full bg-yellow-600/80 text-black font-bold shadow hover:bg-yellow-500 hover:text-yellow-950 hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                        title="Add to Google Calendar"
+                      >
+                        <span>📅</span>
+                        <span>Add to Calendar</span>
+                      </button>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400">Check back soon for our weekly schedule</p>
+                  <p className="text-gray-400 text-center">Check back soon for upcoming events</p>
                 )}
               </div>
             </div>
-            
-            <div className="truck-schedule-card p-6 border border-yellow-600/20">
-              <h4 className="text-xl font-bold text-yellow-500 mb-3">Upcoming Events</h4>
-              <div className="space-y-3 text-muted">
-                {upcomingEvents.length > 0 ? (
-                  upcomingEvents.map((event) => (
-                    <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg text-yellow-500">{event.title}</div>
-                        <div className="text-sm text-gray-400 flex items-center gap-2">
-                          <span>🗓️</span>
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
-                          {event.time && (
-                            <>
-                              <span>•</span>
-                              <span>🕐 {event.time}</span>
-                            </>
+            {/* Map and Location Info */}
+            <div className="md:w-1/2 w-full flex flex-col gap-8">
+              <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-8">
+                <div className="flex flex-col items-center w-full">
+                  <div className="text-2xl font-extrabold glass-text-heading mb-3 flex items-center gap-2">
+                    <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
+                    <span>{selectedLocation ? 'Selected Location' : 'Current Location'}</span>
+                  </div>
+                  <div className="w-20 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-4 shadow-yellow-700/40 shadow"></div>
+                  <div className="text-xl font-bold glass-text-subheading text-center mb-4 break-all flex items-center gap-2">
+
+                    <span>{displayLocation.address}</span>
+                  </div>
+                  {selectedLocation && (
+                    <button
+                      onClick={() => setSelectedLocation(null)}
+                      className="glass-text-heading hover:opacity-80 text-sm mb-4 underline hover:scale-105 transition-all cursor-pointer underline-offset-2 font-semibold"
+                    >
+                      ← Back to current location
+                    </button>
+                  )}
+                  <p className="glass-text-muted text-center mb-6 text-sm">
+                    {selectedLocation 
+                      ? 'Click locations below to view them on the map'
+                      : 'Follow us on social media for real-time location updates and schedule announcements'
+                    }
+                  </p>
+                  {/* Get Directions Button */}
+                  <a
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-8 py-3 rounded-full glass-button text-black font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                  >
+                    
+                    <span>Get Directions</span>
+                  </a>
+                </div>
+              </div>
+              {/* Google Maps Embed */}
+              <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-4">
+                <div className="relative w-full h-[400px] sm:h-[500px] overflow-hidden rounded-2xl border-2 glass-card-border">
+                  <iframe
+                    key={mapEmbedUrl}
+                    title="Crown Majestic Kitchen Location Map"
+                    src={mapEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="absolute inset-0"
+                    aria-label="Google Map showing food truck location"
+                  />
+                </div>
+              </div>
+              {/* Future Events */}
+              <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-6">
+                <h4 className="text-2xl font-extrabold glass-text-heading mb-6 flex items-center gap-2">
+                  <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
+                  <span>Future Events</span>
+                </h4>
+                <div className="space-y-3 text-muted">
+                  {upcomingEvents.length > 0 ? (
+                    upcomingEvents.map((event) => (
+                      <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
+                        <div className="space-y-2">
+                          <div className="font-bold text-lg text-yellow-500">{event.title}</div>
+                          <div className="text-sm text-gray-400 flex items-center gap-2">
+                            <span>🗓️</span>
+                            <span>{new Date(event.date).toLocaleDateString()}</span>
+                            {event.time && (
+                              <>
+                                <span>•</span>
+                                <span>🕐 {event.time}</span>
+                              </>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleLocationClick(event.location)}
+                            className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
+                          >
+                            
+                            <span className="underline decoration-dotted">
+                              {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
+                            </span>
+                          </button>
+                          {event.description && (
+                            <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
                           )}
+                          <button 
+                            onClick={() => addToCalendar(event)}
+                            className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
+                            title="Add to Google Calendar"
+                          >
+                           
+                            <span>Add to Calendar</span>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleLocationClick(event.location)}
-                          className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
-                        >
-                          <span>📍</span>
-                          <span className="underline decoration-dotted">
-                            {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
-                          </span>
-                        </button>
-                        {event.description && (
-                          <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
-                        )}
-                        <button 
-                          onClick={() => addToCalendar(event)}
-                          className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
-                          title="Add to Google Calendar"
-                        >
-                          <span>📅</span>
-                          <span>Add to Calendar</span>
-                        </button>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400">Private events and catering available</p>
-                )}
+                    ))
+                  ) : (
+                    <p className="text-gray-400">Private events and catering available</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
