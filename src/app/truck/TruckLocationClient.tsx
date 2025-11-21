@@ -342,8 +342,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
             <div className="md:w-1/2 w-full flex flex-col gap-8">
               <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-8">
                 <div className="flex flex-col items-center w-full">
-                  <div className="text-2xl font-extrabold glass-text-heading mb-3 flex items-center gap-2">
-                    <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
+                  <div className="text-2xl font-extrabold glass-text-heading mb-3">
                     <span>{selectedLocation ? 'Selected Location' : 'Current Location'}</span>
                   </div>
                   <div className="w-20 h-1 bg-gradient-to-r from-yellow-500 via-yellow-700 to-yellow-500 rounded-full mb-4 shadow-yellow-700/40 shadow"></div>
