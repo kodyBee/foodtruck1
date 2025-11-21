@@ -87,7 +87,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   
   // For embed URL, use coordinates if available, otherwise use search mode with address
   let mapEmbedUrl: string;
-  if (displayLocation.lat && displayLocation.lng) {
+  if (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0) {
     mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${displayLocation.lat},${displayLocation.lng}&zoom=15`;
   } else {
     // Use search mode which is more flexible with address strings
@@ -97,7 +97,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   console.log('Display location:', displayLocation);
   console.log('Map embed URL:', mapEmbedUrl);
   
-  const directionsUrl = displayLocation.lat && displayLocation.lng
+  const directionsUrl = (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0)
     ? `https://www.google.com/maps/dir/?api=1&destination=${displayLocation.lat},${displayLocation.lng}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation.address)}`;
 

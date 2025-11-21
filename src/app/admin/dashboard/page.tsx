@@ -8,16 +8,9 @@ import type { TruckEvent, WeeklySchedule } from '@/types';
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'location' | 'events' | 'schedule'>('location');
+  const [activeTab, setActiveTab] = useState<'events' | 'schedule'>('events');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [debugApiResponse, setDebugApiResponse] = useState<any>(null);
-
-  // Location state
-  const [lat, setLat] = useState('');
-  const [lng, setLng] = useState('');
-  const [address, setAddress] = useState('');
-  const [mapsLink, setMapsLink] = useState('');
 
   // Events state
   const [events, setEvents] = useState<TruckEvent[]>([]);
@@ -57,20 +50,14 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const [locationRes, eventsRes, scheduleRes] = await Promise.all([
-        fetch('/api/location'),
+      const [eventsRes, scheduleRes] = await Promise.all([
         fetch('/api/events'),
         fetch('/api/schedule'),
       ]);
 
-      const locationData = await locationRes.json();
       const eventsData = await eventsRes.json();
       const scheduleData = await scheduleRes.json();
 
-      setLat(locationData.lat.toString());
-      setLng(locationData.lng.toString());
-      setAddress(locationData.address);
-      setMapsLink('');
       setEvents(eventsData);
       
       if (scheduleData.length > 0) {
@@ -126,10 +113,10 @@ export default function AdminDashboard() {
         return decodeURIComponent(qMatch[1]).replace(/\+/g, ' ');
       }
 
-      // If we can at least get coordinates, return them as a location
-      const coords = await parseGoogleMapsLink(link);
-      if (coords) {
-        return `${coords.lat}, ${coords.lng}`;
+      // Try to get coordinates
+      const atMatch = urlToCheck.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+      if (atMatch) {
+        return `${atMatch[1]}, ${atMatch[2]}`;
       }
 
       return null;
@@ -149,175 +136,6 @@ export default function AdminDashboard() {
     const address = await parseAddressFromMapsLink(link);
     if (address) {
       updateScheduleDay(dayIndex, 'location', address);
-    }
-  };
-
-  const parseGoogleMapsLink = async (link: string) => {
-    try {
-      let urlToCheck = link;
-
-      // If it's a shortened link, we need to fetch it to get redirected URL
-      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps') || link.includes('goo.gl')) {
-        try {
-          const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(link)}`);
-          if (response.ok) {
-            const data = await response.json();
-            console.log('[AdminDashboard] API response for maps link:', data);
-            
-            // If API returned parsed coordinates and place name, use them directly
-            if (data.lat && data.lng) {
-              // Also update the address if we got a place name
-              if (data.placeName && !address) {
-                setAddress(data.placeName);
-              }
-              console.log('[AdminDashboard] Using lat/lng from API:', data.lat, data.lng);
-              return { lat: data.lat.toString(), lng: data.lng.toString() };
-            }
-            
-            // Fall back to parsing the resolved URL
-            if (data.resolvedUrl) {
-              urlToCheck = data.resolvedUrl;
-              console.log('[AdminDashboard] Falling back to resolvedUrl:', urlToCheck);
-            }
-          }
-        } catch (e) {
-          // If resolution fails, try to parse the original link anyway
-          console.error('[AdminDashboard] Failed to resolve short link:', e);
-        }
-      }
-
-      // Handle different Google Maps URL formats:
-      // First, try to get the actual place coordinates from the data parameter (most accurate)
-      // Format: !3d30.4209052!4d-81.6969373 (latitude and longitude)
-      const dataParam = urlToCheck;
-      const latMatch = dataParam.match(/!3d(-?\d+\.?\d*)/);
-      const lngMatch = dataParam.match(/!4d(-?\d+\.?\d*)/);
-      
-      if (latMatch && lngMatch) {
-        return { lat: latMatch[1], lng: lngMatch[1] };
-      }
-
-      // Fallback formats:
-      // 1. https://www.google.com/maps/place/.../@LAT,LNG,ZOOM
-      // 2. https://www.google.com/maps?q=LAT,LNG
-      // 3. https://www.google.com/maps/@LAT,LNG,ZOOM
-      // 4. https://www.google.com/maps/dir//LAT,LNG
-      // 5. Plain coordinates in URL
-      
-      const atMatch = urlToCheck.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (atMatch) {
-        return { lat: atMatch[1], lng: atMatch[2] };
-      }
-
-      const qMatch = urlToCheck.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (qMatch) {
-        return { lat: qMatch[1], lng: qMatch[2] };
-      }
-
-      const dirMatch = urlToCheck.match(/\/dir\/\/(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (dirMatch) {
-        return { lat: dirMatch[1], lng: dirMatch[2] };
-      }
-
-      // Try to find any coordinate pattern in the URL
-      const coordMatch = urlToCheck.match(/(-?\d+\.?\d+),\s*(-?\d+\.?\d+)/);
-      if (coordMatch) {
-        const lat = parseFloat(coordMatch[1]);
-        const lng = parseFloat(coordMatch[2]);
-        // Validate that these look like real coordinates
-        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-          return { lat: coordMatch[1], lng: coordMatch[2] };
-        }
-      }
-
-      return null;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const handleLocationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
-
-    let finalLat = lat;
-    let finalLng = lng;
-
-    // If mapsLink is provided, parse it
-    if (mapsLink.trim()) {
-      console.log('[AdminDashboard] Submitting mapsLink:', mapsLink);
-      let apiAddress = address;
-      let apiLat = lat;
-      let apiLng = lng;
-      // Directly call the API for debug
-      try {
-        const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(mapsLink)}`);
-        const data = await response.json();
-        setDebugApiResponse(data);
-        console.log('[AdminDashboard] API response:', data);
-        // If lat/lng are missing but placeName is present, set address to placeName
-        if (!data.lat && !data.lng && data.placeName) {
-          apiAddress = data.placeName;
-          setAddress(data.placeName);
-          setLat('');
-          setLng('');
-        } else if (data.lat && data.lng) {
-          apiLat = data.lat.toString();
-          apiLng = data.lng.toString();
-          setLat(apiLat);
-          setLng(apiLng);
-        }
-      } catch (err) {
-        setDebugApiResponse({ error: 'API call failed' });
-      }
-      const parsed = await parseGoogleMapsLink(mapsLink);
-      console.log('[AdminDashboard] parseGoogleMapsLink result:', parsed);
-      if (parsed) {
-        apiLat = parsed.lat;
-        apiLng = parsed.lng;
-        setLat(parsed.lat);
-        setLng(parsed.lng);
-      }
-      // Only show error if address is missing
-      if (!apiAddress || apiAddress.trim() === '') {
-        setMessage('Invalid Google Maps link. Please check the URL and try again.');
-        setLoading(false);
-        return;
-      }
-      finalLat = apiLat;
-      finalLng = apiLng;
-      setAddress(apiAddress);
-    }
-
-    // Validate we have coordinates
-    if (!finalLat || !finalLng) {
-      setMessage('Please provide either a Google Maps link or enter coordinates manually.');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lat: parseFloat(finalLat),
-          lng: parseFloat(finalLng),
-          address,
-        }),
-      });
-
-      if (response.ok) {
-        setMessage('Location updated successfully!');
-        setMapsLink('');
-      } else {
-        setMessage('Failed to update location');
-      }
-    } catch (error) {
-      setMessage('Error updating location');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -444,12 +262,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-neutral-900 to-black">
-      {debugApiResponse && (
-        <div className="bg-gray-900 border border-red-500 text-red-500 p-4 mb-4 rounded">
-          <strong>API Debug Response:</strong>
-          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(debugApiResponse, null, 2)}</pre>
-        </div>
-      )}
       {/* Header */}
       <div className="bg-neutral-900 border-b border-yellow-500/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -474,16 +286,6 @@ export default function AdminDashboard() {
         {/* Tabs */}
         <div className="flex gap-2 mb-8 border-b border-yellow-500/30">
           <button
-            onClick={() => setActiveTab('location')}
-            className={`px-6 py-3 font-semibold transition-colors ${
-              activeTab === 'location'
-                ? 'text-yellow-500 border-b-2 border-yellow-500'
-                : 'text-gray-400 hover:text-yellow-500'
-            }`}
-          >
-            Truck Location
-          </button>
-          <button
             onClick={() => setActiveTab('events')}
             className={`px-6 py-3 font-semibold transition-colors ${
               activeTab === 'events'
@@ -491,7 +293,7 @@ export default function AdminDashboard() {
                 : 'text-gray-400 hover:text-yellow-500'
             }`}
           >
-            Events
+            One-Time Events
           </button>
           <button
             onClick={() => setActiveTab('schedule')}
@@ -503,6 +305,14 @@ export default function AdminDashboard() {
           >
             Weekly Schedule
           </button>
+        </div>
+        
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+          <p className="text-yellow-300 text-sm">
+            <strong>Note:</strong> The truck&apos;s current location on the website is automatically determined by today&apos;s date. 
+            If there&apos;s a one-time event scheduled for today, that location will be shown. 
+            Otherwise, it will fall back to today&apos;s entry in the weekly schedule.
+          </p>
         </div>
 
         {/* Message */}
@@ -516,97 +326,14 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Location Tab */}
-        {activeTab === 'location' && (
-          <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Update Truck Location</h2>
-            <form onSubmit={handleLocationSubmit} className="space-y-6">
-              <div>
-                <label className="block text-yellow-500 font-semibold mb-2">
-                  Google Maps Link
-                </label>
-                <input
-                  type="text"
-                  value={mapsLink}
-                  onChange={(e) => {
-                    setMapsLink(e.target.value);
-                    console.log('[AdminDashboard] mapsLink input changed:', e.target.value);
-                  }}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-                  placeholder="Paste Google Maps link here (e.g., https://maps.app.goo.gl/...)"
-                />
-                <p className="text-gray-500 text-sm mt-2">
-                  Paste a Google Maps link and we&apos;ll extract the coordinates automatically
-                </p>
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-yellow-500/30"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-neutral-900 text-gray-500">OR enter manually</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-yellow-500 font-semibold mb-2">
-                    Latitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={lat}
-                    onChange={(e) => setLat(e.target.value)}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-yellow-500 font-semibold mb-2">
-                    Longitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={lng}
-                    onChange={(e) => setLng(e.target.value)}
-                    className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-yellow-500 font-semibold mb-2">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-                  placeholder="123 Main St, City, State"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Updating...' : 'Update Location'}
-              </button>
-            </form>
-          </div>
-        )}
-
         {/* Events Tab */}
         {activeTab === 'events' && (
           <div className="space-y-8">
             {/* Add Event Form */}
             <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white">
-                  {editingEventId ? 'Edit Event' : 'Add New Event'}
+                  {editingEventId ? 'Edit Event' : 'Add New One-Time Event'}
                 </h2>
                 {editingEventId && (
                   <button
@@ -618,6 +345,11 @@ export default function AdminDashboard() {
                   </button>
                 )}
               </div>
+              <p className="text-gray-400 mb-6 text-sm">
+                Add special one-time events like festivals, private bookings, or appearances at specific locations. 
+                These events will override the weekly schedule on their date and will be shown as the current location 
+                on the truck page if they&apos;re happening today.
+              </p>
               <form onSubmit={handleEventSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -757,9 +489,11 @@ export default function AdminDashboard() {
         {/* Schedule Tab */}
         {activeTab === 'schedule' && (
           <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Weekly Schedule</h2>
-            <p className="text-gray-400 mb-6">
-              Paste a Google Maps link to auto-fill the location, or enter manually.
+            <h2 className="text-2xl font-bold text-white mb-4">Weekly Schedule - Recurring Locations</h2>
+            <p className="text-gray-400 mb-6 text-sm">
+              Set up your regular weekly schedule here. These are the locations where you&apos;ll be every week on these days.
+              If you have a one-time event scheduled for a specific day, it will override this schedule for that day only.
+              You can paste a Google Maps link to auto-fill the location, or enter manually.
             </p>
             <form onSubmit={handleScheduleSubmit} className="space-y-6">
               {schedule.map((day, index) => (
