@@ -229,52 +229,54 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                 </div>
               </div>
               {/* Future Events - Desktop only, hidden on mobile */}
-              <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mt-8 hidden md:block">
+              <div className="mt-8 hidden md:block">
                 <h4 className="text-2xl font-extrabold glass-text-heading mb-6 flex items-center gap-2">
-                  <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
                   <span>Future Events</span>
                 </h4>
-                <div className="space-y-3 text-muted">
+                <div className="space-y-4">
                   {upcomingEvents.length > 0 ? (
                     upcomingEvents.map((event) => (
-                      <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
-                        <div className="space-y-2">
-                          <div className="font-bold text-lg text-yellow-500">{event.title}</div>
-                          <div className="text-sm text-gray-400 flex items-center gap-2">
-                            <span>🗓️</span>
-                            <span>{new Date(event.date).toLocaleDateString()}</span>
-                            {event.time && (
-                              <>
-                                <span>•</span>
-                                <span>🕐 {event.time}</span>
-                              </>
-                            )}
+                      <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
+                        <div className="flex flex-col items-center w-full">
+                          <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
+                            {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                           </div>
-                          <button
-                            onClick={() => handleLocationClick(event.location)}
-                            className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
-                          >
-                            
-                            <span className="underline decoration-dotted">
-                              {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
-                            </span>
-                          </button>
-                          {event.description && (
-                            <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
+                          <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
+                          <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                            {event.title}
+                          </div>
+                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                            <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
+                          </div>
+                          {event.time && (
+                            <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                              <span className="text-lg">🕒</span> {event.time}
+                            </div>
                           )}
-                          <button 
-                            onClick={() => addToCalendar(event)}
-                            className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
-                            title="Add to Google Calendar"
-                          >
-                           
-                            <span>Add to Calendar</span>
-                          </button>
+                          {event.description && (
+                            <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
+                          )}
+                          <div className="flex gap-2 mt-3 flex-wrap justify-center">
+                            <button
+                              onClick={() => handleLocationClick(event.location)}
+                              className="px-4 py-1.5 rounded-full glass-button text-black font-semibold shadow hover:scale-105 transition-all flex items-center gap-1.5 text-sm border border-yellow-400"
+                            >
+                              <span>Show on map</span>
+                            </button>
+                            <button 
+                              onClick={() => addToCalendar(event)}
+                              className="px-4 py-1.5 rounded-full glass-button text-black font-semibold shadow hover:scale-105 transition-all flex items-center gap-1.5 text-sm border border-yellow-400"
+                              title="Add to Google Calendar"
+                            >
+                              <span>📅</span>
+                              <span>Add to Calendar</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-400">Private events and catering available</p>
+                    <p className="text-gray-400 text-center">Private events and catering available</p>
                   )}
                 </div>
               </div>
@@ -430,52 +432,54 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
               </div>
             </div>
             {/* Future Events - Mobile only, shows after Upcoming Events */}
-            <div className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 md:hidden w-full">
+            <div className="md:hidden w-full">
               <h4 className="text-2xl font-extrabold glass-text-heading mb-6 flex items-center gap-2">
-                <span className="inline-block w-2 h-8 bg-gradient-to-b from-yellow-400 to-yellow-600 rounded-full"></span>
                 <span>Future Events</span>
               </h4>
-              <div className="space-y-3 text-muted">
+              <div className="space-y-4">
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event) => (
-                    <div key={event.id} className="border-b border-yellow-600/10 pb-4 last:border-0 mb-4 last:mb-0">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg text-yellow-500">{event.title}</div>
-                        <div className="text-sm text-gray-400 flex items-center gap-2">
-                          <span>🗓️</span>
-                          <span>{new Date(event.date).toLocaleDateString()}</span>
-                          {event.time && (
-                            <>
-                              <span>•</span>
-                              <span>🕐 {event.time}</span>
-                            </>
-                          )}
+                    <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
+                      <div className="flex flex-col items-center w-full">
+                        <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
+                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
-                        <button
-                          onClick={() => handleLocationClick(event.location)}
-                          className="text-sm text-yellow-500 hover:text-yellow-400 transition-all flex items-center gap-1 hover:gap-2 cursor-pointer"
-                        >
-                          
-                          <span className="underline decoration-dotted">
-                            {event.location.includes('maps.app.goo.gl') || event.location.includes('goo.gl') ? 'View on Map' : event.location}
-                          </span>
-                        </button>
-                        {event.description && (
-                          <div className="text-sm text-gray-400 italic pl-5">{event.description}</div>
+                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
+                        <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                          {event.title}
+                        </div>
+                        <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                          <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
+                        </div>
+                        {event.time && (
+                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                            <span className="text-lg">🕒</span> {event.time}
+                          </div>
                         )}
-                        <button 
-                          onClick={() => addToCalendar(event)}
-                          className="mt-3 flex items-center gap-2 text-sm bg-yellow-600/20 text-yellow-500 px-4 py-2 border border-yellow-600/30 hover:bg-yellow-600/30 hover:border-yellow-500/50 transition-all duration-300 hover:scale-105 font-semibold w-full justify-center sm:w-auto"
-                          title="Add to Google Calendar"
-                        >
-                         
-                          <span>Add to Calendar</span>
-                        </button>
+                        {event.description && (
+                          <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
+                        )}
+                        <div className="flex gap-2 mt-3 flex-wrap justify-center">
+                          <button
+                            onClick={() => handleLocationClick(event.location)}
+                            className="px-4 py-1.5 rounded-full glass-button text-black font-semibold shadow hover:scale-105 transition-all flex items-center gap-1.5 text-sm border border-yellow-400"
+                          >
+                            <span>Show on map</span>
+                          </button>
+                          <button 
+                            onClick={() => addToCalendar(event)}
+                            className="px-4 py-1.5 rounded-full glass-button text-black font-semibold shadow hover:scale-105 transition-all flex items-center gap-1.5 text-sm border border-yellow-400"
+                            title="Add to Google Calendar"
+                          >
+                            <span>📅</span>
+                            <span>Add to Calendar</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-400">Private events and catering available</p>
+                  <p className="text-gray-400 text-center">Private events and catering available</p>
                 )}
               </div>
             </div>

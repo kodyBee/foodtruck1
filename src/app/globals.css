@@ -24,13 +24,6 @@
   --text-muted: #6b7280;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -142,7 +135,7 @@ body {
 }
 
 [data-theme="light"] .truck-page-bg {
-  background: linear-gradient(to bottom, #ffffff, #f9fafb, #f3f4f6);
+  background: linear-gradient(to bottom, #ffffff, #f9fafb);
 }
 
 .truck-section-bg {
@@ -150,7 +143,7 @@ body {
 }
 
 [data-theme="light"] .truck-section-bg {
-  background-color: #f3f4f6;
+  background-color: #f9fafb;
 }
 
 .truck-main-card {
@@ -242,7 +235,7 @@ body {
 }
 
 [data-theme="light"] .contact-page-bg {
-  background: linear-gradient(to bottom, #ffffff, #f9fafb, #f3f4f6);
+  background: linear-gradient(to bottom, #ffffff, #f9fafb);
 }
 
 .contact-section-bg {
@@ -250,7 +243,7 @@ body {
 }
 
 [data-theme="light"] .contact-section-bg {
-  background-color: #f9fafb;
+  background-color: #ffffff;
 }
 
 .contact-form-card {
@@ -306,7 +299,7 @@ body {
 }
 
 [data-theme="light"] .menu-page-bg {
-  background: linear-gradient(to bottom, #ffffff, #f9fafb, #f3f4f6);
+  background: linear-gradient(to bottom, #ffffff, #f9fafb);
 }
 
 .menu-section-bg {
@@ -314,7 +307,15 @@ body {
 }
 
 [data-theme="light"] .menu-section-bg {
-  background-color: #f3f4f6;
+  background-color: #f9fafb;
+}
+
+.menu-construction-text {
+  color: #d1d5db;
+}
+
+[data-theme="light"] .menu-construction-text {
+  color: #6b7280;
 }
 
 /* Home page specific styles */

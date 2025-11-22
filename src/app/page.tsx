@@ -111,7 +111,7 @@ export default function Home() {
 
           {/* Stats/Features */}
           <div className="hidden sm:grid grid-cols-3 gap-8 max-w-4xl mx-auto mt-16">
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-white/10 transition-all duration-300">
+            <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20">
               <div className="flex flex-col items-center gap-3">
                 <div className="p-3 bg-yellow-500/20 rounded-full">
                   <svg className="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -120,12 +120,12 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-yellow-500">5+</p>
-                  <p className="text-gray-400 text-sm">Years Experience</p>
+                  <p className="text-white text-sm">Years Experience</p>
                 </div>
               </div>
             </div>
 
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-white/10 transition-all duration-300">
+            <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20">
               <div className="flex flex-col items-center gap-3">
                 <div className="p-3 bg-yellow-500/20 rounded-full">
                   <svg className="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -134,12 +134,12 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-yellow-500">100%</p>
-                  <p className="text-gray-400 text-sm">Fresh Ingredients</p>
+                  <p className="text-white text-sm">Fresh Ingredients</p>
                 </div>
               </div>
             </div>
 
-            <div className="group p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20 hover:border-yellow-500/50 hover:bg-white/10 transition-all duration-300">
+            <div className="p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-yellow-500/20">
               <div className="flex flex-col items-center gap-3">
                 <div className="p-3 bg-yellow-500/20 rounded-full">
                   <svg className="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
@@ -148,7 +148,7 @@ export default function Home() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-yellow-500">10k+</p>
-                  <p className="text-gray-400 text-sm">Happy Customers</p>
+                  <p className="text-white text-sm">Happy Customers</p>
                 </div>
               </div>
             </div>
