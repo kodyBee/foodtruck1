@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 export async function POST(request: NextRequest) {
   console.log('Contact form API called');
@@ -20,12 +20,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if Resend is configured
-    const hasApiKey = !!process.env.RESEND_API_KEY;
-    const hasEmailTo = !!process.env.CONTACT_EMAIL_TO;
-    console.log('Environment check:', { hasApiKey, hasEmailTo });
+    // Check if email is configured
+    const hasEmailConfig = !!process.env.GMAIL_USER && !!process.env.GMAIL_APP_PASSWORD;
+    console.log('Environment check:', { hasEmailConfig });
     
-    if (!hasApiKey || !hasEmailTo) {
+    if (!hasEmailConfig) {
       console.log('Email service not configured - logging only');
       console.log('----- NEW CONTACT FORM SUBMISSION (Email not sent) -----');
       console.log('From:', name, email);
@@ -38,15 +37,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, emailSent: false });
     }
 
-    console.log('Initializing Resend...');
-    // Initialize Resend with API key
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    console.log('Configuring email transporter...');
+    // Create transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
 
     console.log('Sending email...');
-    // Send email using Resend
-    const { data, error } = await resend.emails.send({
-      from: 'Crown Majestic Kitchen <onboarding@resend.dev>',
-      to: [process.env.CONTACT_EMAIL_TO!],
+    // Send email
+    await transporter.sendMail({
+      from: `"Crown Majestic Kitchen" <${process.env.GMAIL_USER}>`,
+      to: process.env.GMAIL_USER, // Send to yourself
       replyTo: email,
       subject: `New Contact Form Submission from ${name}`,
       html: `
@@ -57,7 +62,7 @@ export async function POST(request: NextRequest) {
           
           <div style="margin: 20px 0;">
             <p style="margin: 10px 0;"><strong>Name:</strong> ${name}</p>
-            <p style="margin: 10px 0;"><strong>Email:</strong> ${email}</p>
+            <p style="margin: 10px 0;"><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
             <p style="margin: 10px 0;"><strong>Phone:</strong> ${phone || 'Not provided'}</p>
             <p style="margin: 10px 0;"><strong>Event Date:</strong> ${eventDate || 'Not provided'}</p>
           </div>
@@ -70,21 +75,14 @@ export async function POST(request: NextRequest) {
           <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
           
           <p style="color: #666; font-size: 12px;">
-            This email was sent from the Crown Majestic Kitchen contact form.
+            This email was sent from the Crown Majestic Kitchen contact form.<br>
+            Reply directly to this email to respond to ${name}.
           </p>
         </div>
       `,
     });
 
-    if (error) {
-      console.error('Resend API error:', JSON.stringify(error, null, 2));
-      return NextResponse.json(
-        { error: 'Failed to send message.' },
-        { status: 500 }
-      );
-    }
-
-    console.log('Email sent successfully! ID:', data?.id);
+    console.log('Email sent successfully!');
     return NextResponse.json({ success: true, emailSent: true });
     
   } catch (error) {
