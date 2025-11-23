@@ -28,21 +28,31 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen contact-page-bg">
+    <div className="min-h-screen bg-primary">
       <Navigation />
-      <section className="relative py-32 px-4 sm:px-6 lg:px-8 contact-section-bg">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl sm:text-6xl font-serif italic mb-4" style={{ fontFamily: 'cursive' }}>
-              <span className="text-primary font-bold" style={{ fontFamily: 'var(--font-dancing-script)' }}>Contact Us</span>
-            </h2>
-            <div className="flex justify-center mb-4">
-              <div className="w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
-            </div>
-            <p className="text-xl text-muted max-w-2xl mx-auto">
-              Have questions about catering, events, or our menu? We&apos;d love to hear from you!
-            </p>
+      
+      {/* Hero Section */}
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent"></div>
+        
+        <div className="relative max-w-7xl mx-auto text-center">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
+            <span className="text-primary" style={{ fontFamily: 'var(--font-dancing-script)' }}>
+              Contact Us
+            </span>
+          </h1>
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
           </div>
+          <p className="text-muted text-xl max-w-3xl mx-auto">
+            Have questions about catering, events, or our menu? We&apos;d love to hear from you!
+          </p>
+        </div>
+      </section>
+
+      {/* Contact Form Section */}
+      <section className="relative py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
           
           <div className="contact-glass-card glass-card-border shadow-2xl rounded-3xl p-8 sm:p-12">
             {status === 'success' ? (
@@ -135,6 +145,7 @@ export default function Contact() {
           </div>
         </div>
       </section>
+      
       <Footer />
     </div>
   );

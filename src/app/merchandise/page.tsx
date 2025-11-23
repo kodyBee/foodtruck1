@@ -14,23 +14,31 @@ export const metadata: Metadata = {
 
 export default function Merchandise() {
   return (
-    <div className="min-h-screen menu-page-bg">
+    <div className="min-h-screen bg-primary">
       <Navigation />
 
-      {/* Merchandise Section */}
-      <section className="relative py-32 px-4 sm:px-6 lg:px-8 menu-section-bg">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl sm:text-6xl font-serif italic mb-4" style={{ fontFamily: 'cursive' }}>
-              <span className="text-primary font-bold" style={{ fontFamily: 'var(--font-dancing-script)' }}>Merchandise</span>
-            </h2>
-            <div className="flex justify-center mb-4">
-              <div className="w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
-            </div>
-            <p className="text-muted text-lg">
-              Rep the Crown with our exclusive gear
-            </p>
+      {/* Hero Section */}
+      <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent"></div>
+        
+        <div className="relative max-w-7xl mx-auto text-center">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-600 bg-clip-text text-transparent" style={{ fontFamily: 'var(--font-dancing-script)' }}>
+              Merchandise
+            </span>
+          </h1>
+          <div className="flex justify-center mb-6">
+            <div className="w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
           </div>
+          <p className="text-muted text-xl max-w-3xl mx-auto">
+            Rep the Crown with our exclusive gear
+          </p>
+        </div>
+      </section>
+
+      {/* Merchandise Grid Section */}
+      <section className="relative py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
@@ -118,7 +126,6 @@ export default function Merchandise() {
               <p className="text-yellow-500 font-bold text-lg">Coming Soon</p>
             </div>
 
-          </div>
         </div>
       </section>
 

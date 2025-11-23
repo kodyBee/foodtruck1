@@ -17,7 +17,7 @@ export default function Truck() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   
   return (
-    <div className="min-h-screen truck-page-bg">
+    <div className="min-h-screen bg-primary">
       <Navigation />
       <TruckLocationClient apiKey={apiKey} />
       <Footer />
