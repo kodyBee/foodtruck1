@@ -30,26 +30,26 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            <Link href="/truck" className={`px-4 py-2 transition-colors font-medium relative group ${pathname === '/truck' ? 'text-yellow-500' : 'nav-link'}`}>
+          <div className="hidden md:flex items-center space-x-2">
+            <Link href="/truck" className={`px-5 py-2.5 transition-all duration-300 font-bold text-lg tracking-wide relative group ${pathname === '/truck' ? 'text-yellow-400 nav-link-active' : 'nav-link-enhanced'}`}>
               <span className="relative z-10">Find Our Truck</span>
-              <div className="absolute inset-0 bg-yellow-500/10 scale-0 group-hover:scale-100 transition-transform rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 scale-0 group-hover:scale-100 transition-all duration-300 rounded-lg"></div>
               {pathname === '/truck' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
               )}
             </Link>
-            <Link href="/menu" className={`px-4 py-2 transition-colors font-medium relative group ${pathname === '/menu' ? 'text-yellow-500' : 'nav-link'}`}>
+            <Link href="/menu" className={`px-5 py-2.5 transition-all duration-300 font-bold text-lg tracking-wide relative group ${pathname === '/menu' ? 'text-yellow-400 nav-link-active' : 'nav-link-enhanced'}`}>
               <span className="relative z-10">Menu</span>
-              <div className="absolute inset-0 bg-yellow-500/10 scale-0 group-hover:scale-100 transition-transform rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 scale-0 group-hover:scale-100 transition-all duration-300 rounded-lg"></div>
               {pathname === '/menu' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
               )}
             </Link>
-            <Link href="/contact" className={`px-4 py-2 transition-colors font-medium relative group ${pathname === '/contact' ? 'text-yellow-500' : 'nav-link'}`}>
+            <Link href="/contact" className={`px-5 py-2.5 transition-all duration-300 font-bold text-lg tracking-wide relative group ${pathname === '/contact' ? 'text-yellow-400 nav-link-active' : 'nav-link-enhanced'}`}>
               <span className="relative z-10">Contact</span>
-              <div className="absolute inset-0 bg-yellow-500/10 scale-0 group-hover:scale-100 transition-transform rounded-lg"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 scale-0 group-hover:scale-100 transition-all duration-300 rounded-lg"></div>
               {pathname === '/contact' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
               )}
             </Link>
           </div>
@@ -89,15 +89,15 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-yellow-500/20 backdrop-blur-lg bg-nav-mobile">
+        <div className="md:hidden border-t border-yellow-500/30 backdrop-blur-lg bg-nav-mobile">
           <div className="px-4 py-4 space-y-3">
-            <Link href="/truck" className={`block px-4 py-3 transition-all rounded-lg ${pathname === '/truck' ? 'text-yellow-500 bg-yellow-500/20 border-l-4 border-yellow-500' : 'nav-link hover:bg-yellow-500/10'}`}>
+            <Link href="/truck" className={`block px-5 py-4 transition-all duration-300 rounded-lg font-bold text-lg tracking-wide ${pathname === '/truck' ? 'text-yellow-400 bg-gradient-to-r from-yellow-500/30 to-yellow-600/20 border-l-4 border-yellow-400 nav-mobile-active' : 'nav-link-mobile-enhanced hover:bg-gradient-to-r hover:from-yellow-500/15 hover:to-transparent'}`}>
               Find Our Truck
             </Link>
-            <Link href="/menu" className={`block px-4 py-3 transition-all rounded-lg ${pathname === '/menu' ? 'text-yellow-500 bg-yellow-500/20 border-l-4 border-yellow-500' : 'nav-link hover:bg-yellow-500/10'}`}>
+            <Link href="/menu" className={`block px-5 py-4 transition-all duration-300 rounded-lg font-bold text-lg tracking-wide ${pathname === '/menu' ? 'text-yellow-400 bg-gradient-to-r from-yellow-500/30 to-yellow-600/20 border-l-4 border-yellow-400 nav-mobile-active' : 'nav-link-mobile-enhanced hover:bg-gradient-to-r hover:from-yellow-500/15 hover:to-transparent'}`}>
               Menu
             </Link>
-            <Link href="/contact" className={`block px-4 py-3 transition-all rounded-lg ${pathname === '/contact' ? 'text-yellow-500 bg-yellow-500/20 border-l-4 border-yellow-500' : 'nav-link hover:bg-yellow-500/10'}`}>
+            <Link href="/contact" className={`block px-5 py-4 transition-all duration-300 rounded-lg font-bold text-lg tracking-wide ${pathname === '/contact' ? 'text-yellow-400 bg-gradient-to-r from-yellow-500/30 to-yellow-600/20 border-l-4 border-yellow-400 nav-mobile-active' : 'nav-link-mobile-enhanced hover:bg-gradient-to-r hover:from-yellow-500/15 hover:to-transparent'}`}>
               Contact
             </Link>
           </div>

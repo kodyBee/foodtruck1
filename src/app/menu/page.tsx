@@ -16,7 +16,7 @@ interface MenuItem {
 }
 
 export default function Menu() {
-  const [showFloatingButton, setShowFloatingButton] = useState(false);
+  const [showFloatingButton, setShowFloatingButton] = useState(true);
   const [menuData, setMenuData] = useState<Record<string, MenuItem[]>>({});
   const [loading, setLoading] = useState(true);
   const ctaSectionRef = useRef<HTMLDivElement>(null);
@@ -59,14 +59,10 @@ export default function Menu() {
         setShowFloatingButton(!isCtaVisible);
       }
     };
-
-    // Initial check after a small delay to ensure ref is attached
-    const timeoutId = setTimeout(handleScroll, 100);
     
     window.addEventListener('scroll', handleScroll);
 
     return () => {
-      clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);

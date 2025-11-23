@@ -75,6 +75,35 @@ body {
   color: #eab308;
 }
 
+/* Enhanced navigation link styles */
+.nav-link-enhanced {
+  color: #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.nav-link-enhanced:hover {
+  color: #fbbf24;
+  transform: translateY(-2px);
+}
+
+[data-theme="light"] .nav-link-enhanced {
+  color: #111827;
+}
+
+[data-theme="light"] .nav-link-enhanced:hover {
+  color: #d97706;
+  transform: translateY(-2px);
+}
+
+/* Mobile navigation enhanced styles */
+.nav-link-mobile-enhanced {
+  color: #e5e7eb;
+}
+
+[data-theme="light"] .nav-link-mobile-enhanced {
+  color: #111827;
+}
+
 /* Theme-aware utility classes */
 .bg-primary {
   background-color: var(--background);
