@@ -126,6 +126,7 @@ export default function Merchandise() {
               <p className="text-yellow-500 font-bold text-lg">Coming Soon</p>
             </div>
 
+          </div>
         </div>
       </section>
 
