@@ -150,4 +150,47 @@ export const dataStore = {
     await prisma.$transaction(updates);
     return schedule;
   },
+
+  getMenuItems: async () => {
+    return await prisma.menuItem.findMany({
+      orderBy: [
+        { category: 'asc' },
+        { name: 'asc' }
+      ]
+    });
+  },
+
+  addMenuItem: async (item: any) => {
+    return await prisma.menuItem.create({
+      data: {
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        available: item.available ?? true
+      }
+    });
+  },
+
+  updateMenuItem: async (id: string, item: any) => {
+    return await prisma.menuItem.update({
+      where: { id },
+      data: {
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        available: item.available
+      }
+    });
+  },
+
+  deleteMenuItem: async (id: string) => {
+    try {
+      await prisma.menuItem.delete({ where: { id } });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
 };

@@ -8,7 +8,7 @@ import type { TruckEvent, WeeklySchedule } from '@/types';
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'events' | 'schedule'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'schedule' | 'menu'>('events');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -36,6 +36,17 @@ export default function AdminDashboard() {
   ]);
   const [scheduleMapsLinks, setScheduleMapsLinks] = useState<Record<number, string>>({});
 
+  // Menu state
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [editingMenuId, setEditingMenuId] = useState<string | null>(null);
+  const [newMenuItem, setNewMenuItem] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    available: true,
+  });
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/admin/login');
@@ -50,19 +61,23 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const [eventsRes, scheduleRes] = await Promise.all([
+      const [eventsRes, scheduleRes, menuRes] = await Promise.all([
         fetch('/api/events'),
         fetch('/api/schedule'),
+        fetch('/api/menu'),
       ]);
 
       const eventsData = await eventsRes.json();
       const scheduleData = await scheduleRes.json();
+      const menuData = await menuRes.json();
 
       setEvents(eventsData);
       
       if (scheduleData.length > 0) {
         setSchedule(scheduleData);
       }
+
+      setMenuItems(menuData);
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -248,6 +263,117 @@ export default function AdminDashboard() {
     setSchedule(updated);
   };
 
+  const handleMenuSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    const isEditing = editingMenuId !== null;
+
+    try {
+      const response = await fetch('/api/menu', {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(isEditing ? { ...newMenuItem, id: editingMenuId } : newMenuItem),
+      });
+
+      if (response.ok) {
+        setMessage(isEditing ? 'Menu item updated successfully!' : 'Menu item added successfully!');
+        setNewMenuItem({
+          name: '',
+          description: '',
+          price: '',
+          category: '',
+          available: true,
+        });
+        setEditingMenuId(null);
+        loadData();
+      } else {
+        setMessage(isEditing ? 'Failed to update menu item' : 'Failed to add menu item');
+      }
+    } catch (error) {
+      setMessage(isEditing ? 'Error updating menu item' : 'Error adding menu item');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditMenuItem = (item: any) => {
+    setEditingMenuId(item.id);
+    setNewMenuItem({
+      name: item.name,
+      description: item.description || '',
+      price: item.price || '',
+      category: item.category,
+      available: item.available,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelMenuEdit = () => {
+    setEditingMenuId(null);
+    setNewMenuItem({
+      name: '',
+      description: '',
+      price: '',
+      category: '',
+      available: true,
+    });
+  };
+
+  const handleDeleteMenuItem = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this menu item?')) return;
+
+    try {
+      const response = await fetch(`/api/menu?id=${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setMessage('Menu item deleted successfully!');
+        loadData();
+      }
+    } catch (error) {
+      setMessage('Error deleting menu item');
+    }
+  };
+
+  const toggleMenuItemAvailability = async (id: string, currentAvailability: boolean) => {
+    try {
+      const item = menuItems.find(i => i.id === id);
+      if (!item) return;
+
+      const response = await fetch('/api/menu', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...item, id, available: !currentAvailability }),
+      });
+
+      if (response.ok) {
+        setMessage(`Menu item ${!currentAvailability ? 'enabled' : 'disabled'} successfully!`);
+        loadData();
+      }
+    } catch (error) {
+      setMessage('Error updating menu item availability');
+    }
+  };
+
+  const getUniqueCategories = () => {
+    const categories = new Set(menuItems.map(item => item.category));
+    return Array.from(categories).sort();
+  };
+
+  const getMenuItemsByCategory = () => {
+    const grouped: Record<string, any[]> = {};
+    menuItems.forEach(item => {
+      if (!grouped[item.category]) {
+        grouped[item.category] = [];
+      }
+      grouped[item.category].push(item);
+    });
+    return grouped;
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -304,6 +430,16 @@ export default function AdminDashboard() {
             }`}
           >
             Weekly Schedule
+          </button>
+          <button
+            onClick={() => setActiveTab('menu')}
+            className={`px-6 py-3 font-semibold transition-colors ${
+              activeTab === 'menu'
+                ? 'text-yellow-500 border-b-2 border-yellow-500'
+                : 'text-gray-400 hover:text-yellow-500'
+            }`}
+          >
+            Menu Management
           </button>
         </div>
         
@@ -553,6 +689,192 @@ export default function AdminDashboard() {
                 {loading ? 'Updating...' : 'Update Schedule'}
               </button>
             </form>
+          </div>
+        )}
+
+        {/* Menu Tab */}
+        {activeTab === 'menu' && (
+          <div className="space-y-8">
+            {/* Add/Edit Menu Item Form */}
+            <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold text-white">
+                  {editingMenuId ? 'Edit Menu Item' : 'Add New Menu Item'}
+                </h2>
+                {editingMenuId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelMenuEdit}
+                    className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+              </div>
+              <p className="text-gray-400 mb-6 text-sm">
+                Add or edit menu items. Items can be organized by category. 
+                You can temporarily disable items without deleting them by toggling their availability.
+              </p>
+              <form onSubmit={handleMenuSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-yellow-500 font-semibold mb-2">
+                      Item Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={newMenuItem.name}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, name: e.target.value })}
+                      className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-yellow-500 font-semibold mb-2">
+                      Price
+                    </label>
+                    <input
+                      type="text"
+                      value={newMenuItem.price}
+                      onChange={(e) => setNewMenuItem({ ...newMenuItem, price: e.target.value })}
+                      className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                      placeholder="$12.99"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-yellow-500 font-semibold mb-2">
+                    Category *
+                  </label>
+                  <input
+                    type="text"
+                    value={newMenuItem.category}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, category: e.target.value })}
+                    className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                    placeholder="e.g., Wings, Sandwiches & Cheesesteaks, Sides"
+                    required
+                    list="categories"
+                  />
+                  <datalist id="categories">
+                    {getUniqueCategories().map(cat => (
+                      <option key={cat} value={cat} />
+                    ))}
+                  </datalist>
+                  <p className="text-gray-400 text-xs mt-1">
+                    Type a new category name or select an existing one
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-yellow-500 font-semibold mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    value={newMenuItem.description}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, description: e.target.value })}
+                    className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500 resize-none"
+                    rows={3}
+                    placeholder="Brief description of the menu item"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="available"
+                    checked={newMenuItem.available}
+                    onChange={(e) => setNewMenuItem({ ...newMenuItem, available: e.target.checked })}
+                    className="w-5 h-5 bg-neutral-800 border border-yellow-500/30 rounded focus:ring-2 focus:ring-yellow-500"
+                  />
+                  <label htmlFor="available" className="text-white font-semibold">
+                    Available (uncheck to temporarily hide from menu)
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {loading ? (editingMenuId ? 'Updating...' : 'Adding...') : (editingMenuId ? 'Update Item' : 'Add Item')}
+                </button>
+              </form>
+            </div>
+
+            {/* Menu Items List by Category */}
+            <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Current Menu Items</h2>
+              {menuItems.length === 0 ? (
+                <p className="text-gray-400">No menu items yet. Add your first item above.</p>
+              ) : (
+                <div className="space-y-8">
+                  {Object.entries(getMenuItemsByCategory()).map(([category, items]) => (
+                    <div key={category}>
+                      <h3 className="text-xl font-bold text-yellow-500 mb-4 pb-2 border-b border-yellow-500/30">
+                        {category} ({items.length} items)
+                      </h3>
+                      <div className="space-y-3">
+                        {items.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`bg-neutral-800 border rounded-lg p-4 ${
+                              item.available 
+                                ? 'border-yellow-500/20' 
+                                : 'border-gray-500/20 opacity-60'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h4 className="text-lg font-bold text-white">
+                                    {item.name}
+                                  </h4>
+                                  {item.price && (
+                                    <span className="text-yellow-500 font-semibold">
+                                      {item.price}
+                                    </span>
+                                  )}
+                                  {!item.available && (
+                                    <span className="px-2 py-1 bg-gray-500/30 text-gray-400 text-xs rounded">
+                                      Hidden
+                                    </span>
+                                  )}
+                                </div>
+                                {item.description && (
+                                  <p className="text-gray-400 text-sm">{item.description}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => toggleMenuItemAvailability(item.id, item.available)}
+                                  className={`px-3 py-2 ${
+                                    item.available 
+                                      ? 'bg-orange-500 hover:bg-orange-600' 
+                                      : 'bg-green-500 hover:bg-green-600'
+                                  } text-white text-sm font-semibold rounded-lg transition-colors`}
+                                  title={item.available ? 'Hide from menu' : 'Show on menu'}
+                                >
+                                  {item.available ? 'Hide' : 'Show'}
+                                </button>
+                                <button
+                                  onClick={() => handleEditMenuItem(item)}
+                                  className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMenuItem(item.id)}
+                                  className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
