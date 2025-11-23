@@ -311,6 +311,31 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Video Testimonial */}
+            <div className="theme-card rounded-2xl p-4 hover:border-yellow-500/40 transition-all">
+              <div className="relative w-full aspect-video rounded-xl overflow-hidden mb-4">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/gtvaamRdPRA?start=445&end=571"
+                  title="Crown Majestic Kitchen - Travis Hunter Review"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+              <div className="px-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-500 font-bold text-lg">TH</span>
+                  </div>
+                  <div>
+                    <p className="text-primary font-semibold">Travis Hunter</p>
+                    <p className="text-muted mb-6 italic">&quot;These wings are 10 out of 10&quot;</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Testimonial 2 */}
             <div className="theme-card rounded-2xl p-8 hover:border-yellow-500/40 transition-all">
               <div className="flex gap-1 mb-4">
@@ -330,29 +355,6 @@ export default function Home() {
                 <div>
                   <p className="text-primary font-semibold">Carmen Davenport</p>
                   <p className="text-muted text-sm">Food Critic</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="theme-card rounded-2xl p-8 hover:border-yellow-500/40 transition-all">
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-muted mb-6 italic">
-                &quot;These wings are 10 out of 10&quot;
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 font-bold text-lg">TH</span>
-                </div>
-                <div>
-                  <p className="text-primary font-semibold">Travis Hunter</p>
-                  <p className="text-muted text-sm">Jacksonville Jaguars #1 draft pick</p>
                 </div>
               </div>
             </div>
