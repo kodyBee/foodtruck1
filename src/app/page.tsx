@@ -298,14 +298,14 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted mb-6 italic">
-                &quot;Best food truck experience ever! The flavors are incredible and the presentation is restaurant-quality.&quot;
+                &quot;Great food, great customer service. Treated me and my brother in law the same way he treated Travis Hunter in his vlog gave learned our names and gave us samples. Just a genuine guy, will definitely be coming back.&quot;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 font-bold text-lg">SJ</span>
+                  <span className="text-yellow-500 font-bold text-lg">AP</span>
                 </div>
                 <div>
-                  <p className="text-primary font-semibold">Sarah Johnson</p>
+                  <p className="text-primary font-semibold">Aaron Pruett</p>
                   <p className="text-muted text-sm">Food Enthusiast</p>
                 </div>
               </div>
@@ -321,15 +321,15 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted mb-6 italic">
-                &quot;They catered our wedding and everyone raved about the food. Professional, delicious, and memorable!&quot;
+                &quot;I ordered the chicken and red velvet waffles, which were absolutely amazing!&quot;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 font-bold text-lg">MC</span>
+                  <span className="text-yellow-500 font-bold text-lg">CD</span>
                 </div>
                 <div>
-                  <p className="text-primary font-semibold">Michael Chen</p>
-                  <p className="text-muted text-sm">Event Host</p>
+                  <p className="text-primary font-semibold">Carmen Davenport</p>
+                  <p className="text-muted text-sm">Food Critic</p>
                 </div>
               </div>
             </div>
@@ -344,15 +344,15 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-muted mb-6 italic">
-                &quot;I track their location religiously! Worth the drive every single time. True gourmet on wheels.&quot;
+                &quot;These wings are 10 out of 10&quot;
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-500 font-bold text-lg">ER</span>
+                  <span className="text-yellow-500 font-bold text-lg">TH</span>
                 </div>
                 <div>
-                  <p className="text-primary font-semibold">Emily Rodriguez</p>
-                  <p className="text-muted text-sm">Regular Customer</p>
+                  <p className="text-primary font-semibold">Travis Hunter</p>
+                  <p className="text-muted text-sm">Jacksonville Jaguars #1 draft pick</p>
                 </div>
               </div>
             </div>
