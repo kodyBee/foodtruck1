@@ -167,7 +167,8 @@ export const dataStore = {
         description: item.description,
         price: item.price,
         category: item.category,
-        available: item.available ?? true
+        available: item.available ?? true,
+        imageUrl: item.imageUrl
       }
     });
   },
@@ -180,7 +181,8 @@ export const dataStore = {
         description: item.description,
         price: item.price,
         category: item.category,
-        available: item.available
+        available: item.available,
+        imageUrl: item.imageUrl
       }
     });
   },

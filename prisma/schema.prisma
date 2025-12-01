@@ -49,4 +49,5 @@ model MenuItem {
   price       String?
   category    String   // "main", "side", "drink"
   available   Boolean  @default(true)
+  imageUrl    String?
 }

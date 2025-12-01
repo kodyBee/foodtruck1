@@ -13,6 +13,7 @@ interface MenuItem {
   price: string | null;
   category: string;
   available: boolean;
+  imageUrl: string | null;
 }
 
 export default function Menu() {
@@ -73,8 +74,6 @@ export default function Menu() {
 
       {/* Hero Section */}
       <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-yellow-500/5 to-transparent"></div>
-        
         <div className="relative max-w-7xl mx-auto text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
             <span className="text-primary" style={{ fontFamily: 'var(--font-dancing-script)' }}>
@@ -116,25 +115,43 @@ export default function Menu() {
               </div>
 
               {/* Menu Items Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 {items.map((item, index) => (
                   <div 
                     key={index}
-                    className="theme-card rounded-xl p-6 hover:border-yellow-500/50 transition-all duration-300 group"
+                    className="theme-card rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-yellow-500/10 transition-all duration-300 group"
                   >
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-primary mb-2 group-hover:text-yellow-500 transition-colors">
-                          {item.name}
-                        </h3>
-                        <p className="text-muted text-sm leading-relaxed">
-                          {item.description}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span className="text-xl font-bold text-yellow-500">
-                          {item.price}
-                        </span>
+                    <div className="flex flex-col md:flex-row gap-0">
+                      {/* Image Section */}
+                      {item.imageUrl && (
+                        <div className="md:w-64 h-64 md:h-auto relative overflow-hidden flex-shrink-0">
+                          <img 
+                            src={item.imageUrl} 
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/60 to-transparent"></div>
+                        </div>
+                      )}
+                      
+                      {/* Content Section */}
+                      <div className={`flex-1 p-6 md:p-8 flex flex-col justify-center ${!item.imageUrl ? 'min-h-[200px]' : ''}`}>
+                        <div className="flex justify-between items-start gap-4 mb-3">
+                          <h3 className="text-2xl md:text-3xl font-bold text-primary group-hover:text-yellow-500 transition-colors">
+                            {item.name}
+                          </h3>
+                          {item.price && (
+                            <span className="text-2xl md:text-3xl font-bold text-yellow-500 whitespace-nowrap">
+                              {item.price}
+                            </span>
+                          )}
+                        </div>
+                        
+                        {item.description && (
+                          <p className="text-muted text-base md:text-lg leading-relaxed">
+                            {item.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

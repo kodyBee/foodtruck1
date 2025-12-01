@@ -45,7 +45,10 @@ export default function AdminDashboard() {
     price: '',
     category: '',
     available: true,
+    imageUrl: '',
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -285,7 +288,9 @@ export default function AdminDashboard() {
           price: '',
           category: '',
           available: true,
+          imageUrl: '',
         });
+        setImagePreview(null);
         setEditingMenuId(null);
         loadData();
       } else {
@@ -298,6 +303,57 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      setMessage('Invalid file type. Only images are allowed.');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setMessage('File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setUploadingImage(true);
+    setMessage('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNewMenuItem({ ...newMenuItem, imageUrl: data.url });
+        setImagePreview(data.url);
+        setMessage('Image uploaded successfully!');
+      } else {
+        const error = await response.json();
+        setMessage(error.error || 'Failed to upload image');
+      }
+    } catch (error) {
+      setMessage('Error uploading image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setNewMenuItem({ ...newMenuItem, imageUrl: '' });
+    setImagePreview(null);
+  };
+
   const handleEditMenuItem = (item: any) => {
     setEditingMenuId(item.id);
     setNewMenuItem({
@@ -306,7 +362,9 @@ export default function AdminDashboard() {
       price: item.price || '',
       category: item.category,
       available: item.available,
+      imageUrl: item.imageUrl || '',
     });
+    setImagePreview(item.imageUrl || null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -318,7 +376,9 @@ export default function AdminDashboard() {
       price: '',
       category: '',
       available: true,
+      imageUrl: '',
     });
+    setImagePreview(null);
   };
 
   const handleDeleteMenuItem = async (id: string) => {
@@ -742,6 +802,50 @@ export default function AdminDashboard() {
                     />
                   </div>
                 </div>
+                
+                {/* Image Upload Section */}
+                <div>
+                  <label className="block text-yellow-500 font-semibold mb-2">
+                    Item Image
+                  </label>
+                  <div className="space-y-3">
+                    {imagePreview ? (
+                      <div className="relative inline-block">
+                        <img 
+                          src={imagePreview} 
+                          alt="Preview" 
+                          className="w-48 h-48 object-cover rounded-lg border-2 border-yellow-500/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-4">
+                        <label className="cursor-pointer px-6 py-3 bg-neutral-800 border-2 border-dashed border-yellow-500/30 rounded-lg hover:border-yellow-500 transition-colors">
+                          <span className="text-white">
+                            {uploadingImage ? 'Uploading...' : 'Choose Image'}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            disabled={uploadingImage}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-gray-400 text-sm">JPG, PNG, WebP (Max 5MB)</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-yellow-500 font-semibold mb-2">
                     Category *
@@ -821,25 +925,34 @@ export default function AdminDashboard() {
                             }`}
                           >
                             <div className="flex justify-between items-start gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h4 className="text-lg font-bold text-white">
-                                    {item.name}
-                                  </h4>
-                                  {item.price && (
-                                    <span className="text-yellow-500 font-semibold">
-                                      {item.price}
-                                    </span>
-                                  )}
-                                  {!item.available && (
-                                    <span className="px-2 py-1 bg-gray-500/30 text-gray-400 text-xs rounded">
-                                      Hidden
-                                    </span>
+                              <div className="flex gap-4 flex-1">
+                                {item.imageUrl && (
+                                  <img 
+                                    src={item.imageUrl} 
+                                    alt={item.name}
+                                    className="w-20 h-20 object-cover rounded-lg border border-yellow-500/20"
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h4 className="text-lg font-bold text-white">
+                                      {item.name}
+                                    </h4>
+                                    {item.price && (
+                                      <span className="text-yellow-500 font-semibold">
+                                        {item.price}
+                                      </span>
+                                    )}
+                                    {!item.available && (
+                                      <span className="px-2 py-1 bg-gray-500/30 text-gray-400 text-xs rounded">
+                                        Hidden
+                                      </span>
+                                    )}
+                                  </div>
+                                  {item.description && (
+                                    <p className="text-gray-400 text-sm">{item.description}</p>
                                   )}
                                 </div>
-                                {item.description && (
-                                  <p className="text-gray-400 text-sm">{item.description}</p>
-                                )}
                               </div>
                               <div className="flex gap-2 flex-shrink-0">
                                 <button
