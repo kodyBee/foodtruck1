@@ -325,33 +325,24 @@ export default function AdminDashboard() {
     setMessage('');
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
       console.log('Uploading file:', file.name, file.type, file.size);
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
+      // Use Vercel Blob client-side upload
+      const { upload } = await import('@vercel/blob/client');
+      
+      const blob = await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload-token',
       });
 
-      const data = await response.json();
-      console.log('Upload response:', data);
-
-      if (response.ok) {
-        setNewMenuItem({ ...newMenuItem, imageUrl: data.url });
-        setImagePreview(data.url);
-        setMessage('Image uploaded successfully!');
-      } else {
-        console.error('Upload failed:', data);
-        setMessage(data.error || 'Failed to upload image');
-        if (data.details) {
-          console.error('Error details:', data.details);
-        }
-      }
-    } catch (error) {
+      console.log('Upload successful:', blob.url);
+      
+      setNewMenuItem({ ...newMenuItem, imageUrl: blob.url });
+      setImagePreview(blob.url);
+      setMessage('Image uploaded successfully!');
+    } catch (error: any) {
       console.error('Upload error:', error);
-      setMessage('Error uploading image. Check console for details.');
+      setMessage(error?.message || 'Error uploading image. Check console for details.');
     } finally {
       setUploadingImage(false);
     }
