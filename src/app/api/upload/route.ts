@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { put } from '@vercel/blob';
 
 export async function POST(request: Request) {
   try {
@@ -25,26 +26,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (2MB max for base64 storage)
-    const maxSize = 2 * 1024 * 1024; // 2MB
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 2MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
     }
 
-    // Convert to base64 data URL
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataUrl = `data:${file.type};base64,${base64}`;
+    // Upload to Vercel Blob
+    const blob = await put(`menu/${file.name}`, file, {
+      access: 'public',
+      addRandomSuffix: true,
+    });
 
-    console.log('File converted to base64 successfully');
+    console.log('File uploaded to Vercel Blob:', blob.url);
 
-    // Return the data URL
-    return NextResponse.json({ url: dataUrl, success: true });
+    return NextResponse.json({ url: blob.url, success: true });
   } catch (error: any) {
-    console.error('Error processing file:', error);
+    console.error('Error uploading file:', error);
     return NextResponse.json({ 
-      error: 'Failed to process file', 
+      error: 'Failed to upload file', 
       details: error?.message || 'Unknown error',
       stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     }, { status: 500 });
