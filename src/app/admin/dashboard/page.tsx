@@ -314,10 +314,10 @@ export default function AdminDashboard() {
       return;
     }
 
-    // Validate file size (4.5MB max)
-    const maxSize = 4.5 * 1024 * 1024;
+    // Validate file size (50MB max)
+    const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      setMessage('File too large. Maximum size is 4.5MB.');
+      setMessage('File too large. Maximum size is 50MB.');
       return;
     }
 
@@ -848,7 +848,7 @@ export default function AdminDashboard() {
                             className="hidden"
                           />
                         </label>
-                        <span className="text-gray-400 text-sm">JPG, PNG, WebP (Max 4.5MB)</span>
+                        <span className="text-gray-400 text-sm">JPG, PNG, WebP (Max 50MB)</span>
                       </div>
                     )}
                   </div>

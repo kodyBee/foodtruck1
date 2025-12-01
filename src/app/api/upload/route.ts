@@ -33,10 +33,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (4.5MB max for Vercel Hobby plan)
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
+    // Validate file size (50MB max for Vercel Pro plan)
+    const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 4.5MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
     }
 
     // Upload to Vercel Blob
