@@ -165,6 +165,13 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     // Keep original type for past events or fallback
     return event;
   });
+  
+  // Helper function to check if an event is today
+  const isToday = (dateString: string) => {
+    const eventDate = new Date(dateString);
+    eventDate.setHours(0, 0, 0, 0);
+    return eventDate.getTime() === now.getTime();
+  };
 
   // Filter and sort events
   const thisWeekEvents = categorizedEvents
@@ -288,11 +295,11 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
               </h4>
               <div className="space-y-4">
                 {thisWeekEvents.length > 0 ? (
-                  thisWeekEvents.map((event, index) => (
+                  thisWeekEvents.map((event) => (
                     <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
                       <div className="flex flex-col items-center w-full">
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {index === 0 ? 'Today' : new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                          {isToday(event.date) ? 'Today' : new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
                         </div>
                         <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
                         <div className="text-xl font-bold glass-text-subheading text-center mb-2">
@@ -309,7 +316,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                       {event.description && (
                         <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
                       )}
-                      {index === 0 ? (
+                      {isToday(event.date) ? (
                         <a
                           href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
                           target="_blank"
