@@ -7,9 +7,6 @@ import { put } from '@vercel/blob';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// Note: Body size limits are handled by Vercel automatically for blob uploads
-// Default limit is 4.5MB for Hobby plan, 50MB for Pro plan
-
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -33,13 +30,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (50MB max for Vercel Pro plan)
+    // Validate file size (50MB max)
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
     }
 
-    // Upload to Vercel Blob
+    // Check if BLOB_READ_WRITE_TOKEN is set
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('BLOB_READ_WRITE_TOKEN not found in environment variables');
+      return NextResponse.json({ 
+        error: 'Vercel Blob storage not configured. Please add BLOB_READ_WRITE_TOKEN to your environment variables.' 
+      }, { status: 500 });
+    }
+
+    // Upload to Vercel Blob using stream
     const blob = await put(`menu/${file.name}`, file, {
       access: 'public',
       addRandomSuffix: true,
@@ -53,7 +58,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       error: 'Failed to upload file', 
       details: error?.message || 'Unknown error',
-      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     }, { status: 500 });
   }
 }
