@@ -328,22 +328,30 @@ export default function AdminDashboard() {
       const formData = new FormData();
       formData.append('file', file);
 
+      console.log('Uploading file:', file.name, file.type, file.size);
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
+      const data = await response.json();
+      console.log('Upload response:', data);
+
       if (response.ok) {
-        const data = await response.json();
         setNewMenuItem({ ...newMenuItem, imageUrl: data.url });
         setImagePreview(data.url);
         setMessage('Image uploaded successfully!');
       } else {
-        const error = await response.json();
-        setMessage(error.error || 'Failed to upload image');
+        console.error('Upload failed:', data);
+        setMessage(data.error || 'Failed to upload image');
+        if (data.details) {
+          console.error('Error details:', data.details);
+        }
       }
     } catch (error) {
-      setMessage('Error uploading image');
+      console.error('Upload error:', error);
+      setMessage('Error uploading image. Check console for details.');
     } finally {
       setUploadingImage(false);
     }
