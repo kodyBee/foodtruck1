@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 export async function POST(request: Request) {
   try {
@@ -28,42 +25,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validate file size (2MB max for base64 storage)
+    const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 5MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large. Maximum size is 2MB.' }, { status: 400 });
     }
 
+    // Convert to base64 data URL
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const base64 = buffer.toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filename = `${timestamp}-${sanitizedName}`;
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'menu');
-    
-    console.log('Upload directory:', uploadDir);
-    
-    // Create directory if it doesn't exist
-    if (!existsSync(uploadDir)) {
-      console.log('Creating upload directory...');
-      await mkdir(uploadDir, { recursive: true });
-    }
+    console.log('File converted to base64 successfully');
 
-    const filepath = join(uploadDir, filename);
-    console.log('Writing file to:', filepath);
-    
-    await writeFile(filepath, buffer);
-    console.log('File written successfully');
-
-    // Return the public URL
-    const publicUrl = `/uploads/menu/${filename}`;
-    return NextResponse.json({ url: publicUrl, success: true });
+    // Return the data URL
+    return NextResponse.json({ url: dataUrl, success: true });
   } catch (error: any) {
-    console.error('Error uploading file:', error);
+    console.error('Error processing file:', error);
     return NextResponse.json({ 
-      error: 'Failed to upload file', 
+      error: 'Failed to process file', 
       details: error?.message || 'Unknown error',
       stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
     }, { status: 500 });
