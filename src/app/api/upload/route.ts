@@ -36,11 +36,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
     }
 
-    // Check if BLOB_READ_WRITE_TOKEN is set
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      console.error('BLOB_READ_WRITE_TOKEN not found in environment variables');
+    // Check if Blob token is set
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN || process.env.menu_READ_WRITE_TOKEN;
+    if (!blobToken) {
+      console.error('Blob token not found in environment variables');
       return NextResponse.json({ 
-        error: 'Vercel Blob storage not configured. Please add BLOB_READ_WRITE_TOKEN to your environment variables.' 
+        error: 'Vercel Blob storage not configured. Please add BLOB_READ_WRITE_TOKEN or menu_READ_WRITE_TOKEN to your environment variables.' 
       }, { status: 500 });
     }
 
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
     const blob = await put(`menu/${file.name}`, file, {
       access: 'public',
       addRandomSuffix: true,
+      token: blobToken,
     });
 
     console.log('File uploaded to Vercel Blob:', blob.url);
