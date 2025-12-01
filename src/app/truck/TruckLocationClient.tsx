@@ -62,6 +62,55 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
         setLocation(locationData);
         setEvents(eventsData);
         setSchedule(scheduleData);
+        
+        // After loading, resolve the closest event's location if it's a short link
+        if (eventsData.length > 0) {
+          const now = new Date();
+          const localNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const oneWeekFromNow = new Date(localNow.getTime() + 7 * 24 * 60 * 60 * 1000);
+          
+          // Find events within this week
+          const thisWeekEvents = eventsData
+            .map((event: any) => {
+              const [year, month, day] = event.date.split('-').map(Number);
+              const eventDate = new Date(year, month - 1, day);
+              if (eventDate >= localNow && eventDate <= oneWeekFromNow) {
+                return event;
+              }
+              return null;
+            })
+            .filter((e: any) => e !== null)
+            .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          
+          // If there's a closest event, try to resolve its location
+          if (thisWeekEvents.length > 0) {
+            const closestEvent = thisWeekEvents[0];
+            const locationAddress = closestEvent.location;
+            
+            // Check if it's a Google Maps short link
+            if (locationAddress.includes('maps.app.goo.gl') || locationAddress.includes('goo.gl')) {
+              try {
+                const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(locationAddress)}`);
+                const data = await response.json();
+                
+                if (data.placeName || (data.lat && data.lng)) {
+                  setSelectedLocation({
+                    address: data.placeName || locationAddress,
+                    lat: data.lat,
+                    lng: data.lng
+                  });
+                } else {
+                  setSelectedLocation({ address: locationAddress, lat: 0, lng: 0 });
+                }
+              } catch (error) {
+                console.error('Error resolving event location:', error);
+                setSelectedLocation({ address: locationAddress, lat: 0, lng: 0 });
+              }
+            } else {
+              setSelectedLocation({ address: locationAddress, lat: 0, lng: 0 });
+            }
+          }
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -82,70 +131,6 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     );
   }
   
-  // Use selected location if available, otherwise use current truck location
-  const displayLocation = selectedLocation || location;
-  
-  // For embed URL, use coordinates if available, otherwise use search mode with address
-  let mapEmbedUrl: string;
-  if (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0) {
-    mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${displayLocation.lat},${displayLocation.lng}&zoom=15`;
-  } else {
-    // Use search mode which is more flexible with address strings
-    mapEmbedUrl = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(displayLocation.address)}&zoom=15`;
-  }
-  
-  console.log('Display location:', displayLocation);
-  console.log('Map embed URL:', mapEmbedUrl);
-  
-  const directionsUrl = (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0)
-    ? `https://www.google.com/maps/dir/?api=1&destination=${displayLocation.lat},${displayLocation.lng}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation.address)}`;
-
-  const handleLocationClick = async (locationAddress: string) => {
-    console.log('Location clicked:', locationAddress);
-    
-    // Check if it's a Google Maps short link
-    if (locationAddress.includes('maps.app.goo.gl') || locationAddress.includes('goo.gl')) {
-      try {
-        const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(locationAddress)}`);
-        const data = await response.json();
-        console.log('API response:', data);
-        
-        if (data.placeName || (data.lat && data.lng)) {
-          const newLocation = {
-            address: data.placeName || locationAddress,
-            lat: data.lat,
-            lng: data.lng
-          };
-          console.log('Setting location:', newLocation);
-          setSelectedLocation(newLocation);
-          return;
-        }
-        
-        // Fallback: parse the resolved URL if API didn't extract info
-        if (data.resolvedUrl) {
-          const fullUrl = data.resolvedUrl;
-          console.log('Parsing resolved URL:', fullUrl);
-          
-          // Try to extract place name from the URL path
-          const placeMatch = fullUrl.match(/\/maps\/place\/([^\/]+)/);
-          if (placeMatch) {
-            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-            console.log('Setting location with place name:', placeName);
-            setSelectedLocation({ address: placeName });
-            return;
-          }
-        }
-      } catch (error) {
-        console.error('Error resolving maps link:', error);
-      }
-    }
-    
-    // Default: just use the address as-is
-    console.log('Setting location as-is:', locationAddress);
-    setSelectedLocation({ address: locationAddress });
-  };
-
   // Auto-categorize events based on date
   const now = new Date();
   // Create a clean date object for today in local timezone
@@ -168,6 +153,78 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     return event;
   });
   
+  // Filter and sort events
+  const thisWeekEvents = categorizedEvents
+    .filter(e => e.type === 'this-week')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
+  
+  // Find the closest event to today (should be the first in thisWeekEvents since it's sorted)
+  const closestEvent = thisWeekEvents.length > 0 ? thisWeekEvents[0] : null;
+  
+  // Determine the best location to show on the map
+  // Priority: 1) manually selected location, 2) closest event, 3) API location
+  let displayLocation = selectedLocation;
+  
+  if (!displayLocation && closestEvent) {
+    displayLocation = { address: closestEvent.location, lat: 0, lng: 0 };
+  }
+  
+  if (!displayLocation) {
+    displayLocation = location;
+  }
+  
+  // For embed URL, use coordinates if available, otherwise use search mode with address
+  let mapEmbedUrl: string;
+  if (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0) {
+    mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${displayLocation.lat},${displayLocation.lng}&zoom=15`;
+  } else {
+    // Use search mode which is more flexible with address strings
+    mapEmbedUrl = `https://www.google.com/maps/embed/v1/search?key=${apiKey}&q=${encodeURIComponent(displayLocation.address)}&zoom=15`;
+  }
+  
+  const directionsUrl = (displayLocation.lat && displayLocation.lng && displayLocation.lat !== 0 && displayLocation.lng !== 0)
+    ? `https://www.google.com/maps/dir/?api=1&destination=${displayLocation.lat},${displayLocation.lng}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(displayLocation.address)}`;
+
+  const handleLocationClick = async (locationAddress: string) => {
+    // Check if it's a Google Maps short link
+    if (locationAddress.includes('maps.app.goo.gl') || locationAddress.includes('goo.gl')) {
+      try {
+        const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(locationAddress)}`);
+        const data = await response.json();
+        
+        if (data.placeName || (data.lat && data.lng)) {
+          const newLocation = {
+            address: data.placeName || locationAddress,
+            lat: data.lat,
+            lng: data.lng
+          };
+          setSelectedLocation(newLocation);
+          return;
+        }
+        
+        // Fallback: parse the resolved URL if API didn't extract info
+        if (data.resolvedUrl) {
+          const fullUrl = data.resolvedUrl;
+          
+          // Try to extract place name from the URL path
+          const placeMatch = fullUrl.match(/\/maps\/place\/([^\/]+)/);
+          if (placeMatch) {
+            const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+            setSelectedLocation({ address: placeName });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error resolving maps link:', error);
+      }
+    }
+    
+    // Default: just use the address as-is
+    setSelectedLocation({ address: locationAddress });
+  };
+
+  
   // Helper function to check if an event is today
   const isToday = (dateString: string) => {
     const [year, month, day] = dateString.split('-').map(Number);
@@ -175,10 +232,6 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     return eventDate.getTime() === localNow.getTime();
   };
 
-  // Filter and sort events
-  const thisWeekEvents = categorizedEvents
-    .filter(e => e.type === 'this-week')
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
   const upcomingEvents = categorizedEvents
     .filter(e => e.type === 'upcoming')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date ascending
@@ -198,10 +251,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     const dateStr = dateForDay.toISOString().split('T')[0];
     
     // Check if there's an event on this date
-    const eventOnThisDay = thisWeekEvents.find(e => {
-      console.log(`Comparing event date "${e.date}" with day date "${dateStr}" for ${dayName}`);
-      return e.date === dateStr;
-    });
+    const eventOnThisDay = thisWeekEvents.find(e => e.date === dateStr);
     
     // Get the schedule for this day
     const scheduleForDay = schedule.find(s => s.day === dayName);
@@ -214,11 +264,6 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
       schedule: scheduleForDay || { day: dayName, location: null, time: null, notes: null }
     };
   }).sort((a, b) => a.daysFromToday - b.daysFromToday);
-  
-  console.log('Week view:', weekView);
-  console.log('This week events:', thisWeekEvents);
-  console.log('Today date:', localNow.toISOString().split('T')[0]);
-  console.log('Today day of week:', today, todayDayName);
 
   return (
     
