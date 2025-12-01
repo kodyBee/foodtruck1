@@ -30,10 +30,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (50MB max)
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    // Validate file size (4MB max to stay within Vercel body limits)
+    const maxSize = 4 * 1024 * 1024; // 4MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 50MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large. Maximum size is 4MB.' }, { status: 400 });
     }
 
     // Check if Blob token is set
