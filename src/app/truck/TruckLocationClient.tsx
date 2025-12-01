@@ -148,14 +148,16 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
 
   // Auto-categorize events based on date
   const now = new Date();
-  now.setHours(0, 0, 0, 0); // Start of today
-  const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // Create a clean date object for today in local timezone
+  const localNow = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const oneWeekFromNow = new Date(localNow.getTime() + 7 * 24 * 60 * 60 * 1000);
   
   const categorizedEvents = events.map(event => {
-    const eventDate = new Date(event.date);
-    eventDate.setHours(0, 0, 0, 0); // Normalize to start of day
+    // Parse date string directly without adding time to avoid timezone shifts
+    const [year, month, day] = event.date.split('-').map(Number);
+    const eventDate = new Date(year, month - 1, day); // month is 0-indexed
     // If event is within the next 7 days (including today), it's "this week"
-    if (eventDate >= now && eventDate <= oneWeekFromNow) {
+    if (eventDate >= localNow && eventDate <= oneWeekFromNow) {
       return { ...event, type: 'this-week' as const };
     }
     // If event is in the future but more than a week away, it's "upcoming"
@@ -168,9 +170,9 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   
   // Helper function to check if an event is today
   const isToday = (dateString: string) => {
-    const eventDate = new Date(dateString);
-    eventDate.setHours(0, 0, 0, 0);
-    return eventDate.getTime() === now.getTime();
+    const [year, month, day] = dateString.split('-').map(Number);
+    const eventDate = new Date(year, month - 1, day);
+    return eventDate.getTime() === localNow.getTime();
   };
 
   // Filter and sort events
@@ -183,22 +185,40 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
 
   // Reorder schedule to start from today
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const today = now.getDay(); // 0-6, where 0 is Sunday
+  const today = localNow.getDay(); // 0-6, where 0 is Sunday
   const todayDayName = daysOfWeek[today];
   
-  // Sort schedule to start from today
-  const reorderedSchedule = schedule
-    .slice()
-    .sort((a, b) => {
-      const aIndex = daysOfWeek.indexOf(a.day);
-      const bIndex = daysOfWeek.indexOf(b.day);
-      
-      // Calculate days from today (0 = today, 1 = tomorrow, etc.)
-      const aDaysFromToday = (aIndex - today + 7) % 7;
-      const bDaysFromToday = (bIndex - today + 7) % 7;
-      
-      return aDaysFromToday - bDaysFromToday;
+  // Create a merged week view: combine schedule with events
+  // For each day of the week starting from today, show event if exists, otherwise show schedule
+  const weekView = daysOfWeek.map((dayName, dayIndex) => {
+    // Calculate the date for this day
+    const daysFromToday = (dayIndex - today + 7) % 7;
+    const dateForDay = new Date(localNow);
+    dateForDay.setDate(localNow.getDate() + daysFromToday);
+    const dateStr = dateForDay.toISOString().split('T')[0];
+    
+    // Check if there's an event on this date
+    const eventOnThisDay = thisWeekEvents.find(e => {
+      console.log(`Comparing event date "${e.date}" with day date "${dateStr}" for ${dayName}`);
+      return e.date === dateStr;
     });
+    
+    // Get the schedule for this day
+    const scheduleForDay = schedule.find(s => s.day === dayName);
+    
+    return {
+      day: dayName,
+      daysFromToday,
+      date: dateStr,
+      event: eventOnThisDay || null,
+      schedule: scheduleForDay || { day: dayName, location: null, time: null, notes: null }
+    };
+  }).sort((a, b) => a.daysFromToday - b.daysFromToday);
+  
+  console.log('Week view:', weekView);
+  console.log('This week events:', thisWeekEvents);
+  console.log('Today date:', localNow.toISOString().split('T')[0]);
+  console.log('Today day of week:', today, todayDayName);
 
   return (
     
@@ -253,7 +273,10 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             {event.title}
                           </div>
                           <div className="text-md glass-text-body flex items-center gap-2 mb-1">
-                            <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
+                            <span className="text-lg">📅</span> {(() => {
+                              const [year, month, day] = event.date.split('-').map(Number);
+                              return new Date(year, month - 1, day).toLocaleDateString();
+                            })()}
                           </div>
                           {event.time && (
                             <div className="text-md glass-text-body flex items-center gap-2 mb-1">
@@ -291,86 +314,69 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
             {/* Upcoming Events Table - Second on mobile, left side on desktop */}
             <div className="md:w-1/2 w-full md:order-1">
               <h4 className="text-2xl font-extrabold glass-text-heading mb-6 flex items-center gap-2">
-                <span>Upcoming Events</span>
+                <span>This Week</span>
               </h4>
               <div className="space-y-4">
-                {thisWeekEvents.length > 0 ? (
-                  thisWeekEvents.map((event) => (
-                    <div key={event.id} className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300">
-                      <div className="flex flex-col items-center w-full">
-                        <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {isToday(event.date) ? 'Today' : new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                        </div>
-                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
-                        <div className="text-xl font-bold glass-text-subheading text-center mb-2">
-                          {event.title}
-                        </div>
-                        <div className="text-md glass-text-body flex items-center gap-2 mb-1">
-                          <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
-                        </div>
-                        {event.time && (
-                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
-                            <span className="text-lg">🕒</span> {event.time}
-                          </div>
-                        )}
-                      {event.description && (
-                        <div className="text-sm glass-text-body italic mb-2 text-center">{event.description}</div>
-                      )}
-                      {isToday(event.date) ? (
-                        <a
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                        >
-                          <span>Get Directions</span>
-                        </a>
-                      ) : (
-                        <button
-                          onClick={() => handleLocationClick(event.location)}
-                          className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                        >
-                          <span>Show on map</span>
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => addToCalendar(event)}
-                        className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                        title="Add to Google Calendar"
-                      >
-                        <span>📅</span>
-                        <span>Add to Calendar</span>
-                      </button>
-                    </div>
-                  </div>
-                  ))
-                ) : reorderedSchedule.length > 0 ? (
-                  reorderedSchedule.map((day, index) => (
+                {weekView.map((dayInfo, index) => {
+                  const isThisToday = dayInfo.daysFromToday === 0;
+                  const displayItem = dayInfo.event || dayInfo.schedule;
+                  const hasLocation = dayInfo.event?.location || dayInfo.schedule.location;
+                  
+                  return (
                     <div
-                      key={day.day}
+                      key={dayInfo.day}
                       className="glass-card glass-card-border shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center hover:shadow-yellow-900/30 transition-all duration-300"
                     >
                       <div className="flex flex-col items-center w-full">
                         <div className="text-4xl font-black glass-text-heading tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {index === 0 ? 'Today' : day.day.slice(0,3)}
+                          {isThisToday ? 'Today' : dayInfo.day.slice(0, 3)}
                         </div>
                         <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
-                        <div className="text-xl font-bold glass-text-subheading text-center mb-2">
-                          {day.location ? day.location : <span className='text-gray-500 italic'>TBD</span>}
-                        </div>
-                        {day.time && (
-                          <div className="text-md glass-text-body flex items-center gap-2 mb-1">
-                            <span className="text-lg">🕒</span> {day.time}
-                          </div>
-                        )}
-                        {day.notes && (
-                          <div className="text-sm glass-text-body italic mb-2">{day.notes}</div>
-                        )}
-                        {day.location && (
+                        
+                        {dayInfo.event ? (
                           <>
-                            {index === 0 ? (
+                            <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                              {dayInfo.event.title}
+                            </div>
+                            <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                              <span className="text-lg">📅</span> {(() => {
+                                const [year, month, day] = dayInfo.event.date.split('-').map(Number);
+                                return new Date(year, month - 1, day).toLocaleDateString();
+                              })()}
+                            </div>
+                            {dayInfo.event.time && (
+                              <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                                <span className="text-lg">🕒</span> {dayInfo.event.time}
+                              </div>
+                            )}
+                            {dayInfo.event.description && (
+                              <div className="text-sm glass-text-body italic mb-2 text-center">{dayInfo.event.description}</div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-xl font-bold glass-text-subheading text-center mb-2">
+                              {dayInfo.schedule.location ? dayInfo.schedule.location : <span className='text-gray-500 italic'>{(() => {
+                                const [year, month, day] = dayInfo.date.split('-').map(Number);
+                                return new Date(year, month - 1, day).toLocaleDateString();
+                              })()}</span>}
+                            </div>
+                            {dayInfo.schedule.time && (
+                              <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                                <span className="text-lg">🕒</span> {dayInfo.schedule.time}
+                              </div>
+                            )}
+                            {dayInfo.schedule.notes && (
+                              <div className="text-sm glass-text-body italic mb-2">{dayInfo.schedule.notes}</div>
+                            )}
+                          </>
+                        )}
+                        
+                        {hasLocation && (
+                          <>
+                            {isThisToday ? (
                               <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(day.location)}`}
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dayInfo.event?.location || dayInfo.schedule.location!)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
@@ -379,7 +385,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                               </a>
                             ) : (
                               <button
-                                onClick={() => handleLocationClick(day.location!)}
+                                onClick={() => handleLocationClick(dayInfo.event?.location || dayInfo.schedule.location!)}
                                 className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
                               >
                                 <span>Show on map</span>
@@ -387,55 +393,25 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             )}
                           </>
                         )}
-                        {!day.location && (
+                        
+                        {dayInfo.event && (
+                          <button 
+                            onClick={() => addToCalendar(dayInfo.event!)}
+                            className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
+                            title="Add to Google Calendar"
+                          >
+                            <span>📅</span>
+                            <span>Add to Calendar</span>
+                          </button>
+                        )}
+                        
+                        {!hasLocation && (
                           <div className="text-sm text-gray-500 mt-2">Check back for updates</div>
                         )}
                       </div>
                     </div>
-                  ))
-                ) : thisWeekEvents.length > 0 ? (
-                  thisWeekEvents.map((event) => (
-                    <div key={event.id} className="bg-gradient-to-br from-black/80 via-neutral-900/90 to-neutral-950/80 backdrop-blur-xl shadow-2xl rounded-3xl p-6 mb-6 flex flex-col items-center justify-center border border-yellow-700/30 hover:shadow-yellow-900/30 transition-all duration-300">
-                      <div className="flex flex-col items-center w-full">
-                        <div className="text-4xl font-black text-yellow-400 tracking-widest mb-2 drop-shadow-lg uppercase">
-                          {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                        </div>
-                        <div className="w-32 h-0.5 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-3"></div>
-                        <div className="text-xl font-bold text-yellow-200 text-center mb-2">
-                          {event.title}
-                        </div>
-                        <div className="text-md text-yellow-300 flex items-center gap-2 mb-1">
-                           {new Date(event.date).toLocaleDateString()}
-                        </div>
-                        {event.time && (
-                          <div className="text-md text-yellow-300 flex items-center gap-2 mb-1">
-                             {event.time}
-                          </div>
-                        )}
-                      </div>
-                      {event.description && (
-                        <div className="text-sm text-yellow-500 italic mb-2 text-center">{event.description}</div>
-                      )}
-                      <button
-                        onClick={() => handleLocationClick(event.location)}
-                        className="mt-3 px-6 py-2 rounded-full bg-yellow-600/80 text-black font-bold shadow hover:bg-yellow-500 hover:text-yellow-950 hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                      >
-                       
-                        <span>Show on map</span>
-                      </button>
-                      <button 
-                        onClick={() => addToCalendar(event)}
-                        className="mt-3 px-6 py-2 rounded-full bg-yellow-600/80 text-black font-bold shadow hover:bg-yellow-500 hover:text-yellow-950 hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                        title="Add to Google Calendar"
-                      >
-                        <span>📅</span>
-                        <span>Add to Calendar</span>
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400 text-center">Check back soon for upcoming events</p>
-                )}
+                  );
+                })}
               </div>
             </div>
             {/* Future Events - Mobile only, shows after Upcoming Events */}
@@ -456,7 +432,10 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                           {event.title}
                         </div>
                         <div className="text-md glass-text-body flex items-center gap-2 mb-1">
-                          <span className="text-lg">📅</span> {new Date(event.date).toLocaleDateString()}
+                          <span className="text-lg">📅</span> {(() => {
+                            const [year, month, day] = event.date.split('-').map(Number);
+                            return new Date(year, month - 1, day).toLocaleDateString();
+                          })()}
                         </div>
                         {event.time && (
                           <div className="text-md glass-text-body flex items-center gap-2 mb-1">
