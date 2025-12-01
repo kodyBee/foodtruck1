@@ -3,8 +3,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { put } from '@vercel/blob';
 
+// Route segment config
 export const runtime = 'nodejs';
-export const maxDuration = 60; // Maximum execution time in seconds
+export const maxDuration = 60;
+
+// Note: Body size limits are handled by Vercel automatically for blob uploads
+// Default limit is 4.5MB for Hobby plan, 50MB for Pro plan
 
 export async function POST(request: Request) {
   try {
@@ -29,10 +33,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid file type. Only images are allowed.' }, { status: 400 });
     }
 
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Validate file size (4.5MB max for Vercel Hobby plan)
+    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 400 });
+      return NextResponse.json({ error: 'File too large. Maximum size is 4.5MB.' }, { status: 400 });
     }
 
     // Upload to Vercel Blob
