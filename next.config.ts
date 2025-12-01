@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   // Strict mode for better error detection
   reactStrictMode: true,
   
+  // API route configuration for larger uploads
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+  
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],

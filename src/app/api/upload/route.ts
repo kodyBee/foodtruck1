@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { put } from '@vercel/blob';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60; // Maximum execution time in seconds
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
