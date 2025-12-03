@@ -102,9 +102,14 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   // Determine the best location to show on the map
   // Priority: 1) closest event location, 2) API location
   const displayLocation = useMemo(() => {
-    return closestEvent 
-      ? { address: closestEvent.location, lat: 0, lng: 0 } 
-      : location;
+    if (closestEvent) {
+      return { address: closestEvent.location, lat: 0, lng: 0 };
+    }
+    if (location) {
+      return location;
+    }
+    // Fallback to empty location
+    return { address: '', lat: 0, lng: 0 };
   }, [closestEvent, location]);
 
   // Loading state
