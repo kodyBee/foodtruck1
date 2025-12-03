@@ -20,6 +20,7 @@ export default function AdminDashboard() {
     date: '',
     time: '',
     location: '',
+    locationName: '',
     description: '',
     type: 'this-week' as 'this-week' | 'upcoming',
   });
@@ -34,7 +35,6 @@ export default function AdminDashboard() {
     { day: 'Saturday' },
     { day: 'Sunday' },
   ]);
-  const [scheduleMapsLinks, setScheduleMapsLinks] = useState<Record<number, string>>({});
 
   // Menu state
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -86,77 +86,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const parseAddressFromMapsLink = async (link: string) => {
-    try {
-      let urlToCheck = link;
-
-      // Resolve shortened links
-      if (link.includes('maps.app.goo.gl') || link.includes('goo.gl/maps') || link.includes('goo.gl')) {
-        try {
-          const response = await fetch(`/api/resolve-maps-link?url=${encodeURIComponent(link)}`);
-          if (response.ok) {
-            const data = await response.json();
-            
-            // If API returned a place name, use it directly
-            if (data.placeName) {
-              return data.placeName;
-            }
-            
-            // If we got coordinates but no place name, use them
-            if (data.lat && data.lng) {
-              return `${data.lat}, ${data.lng}`;
-            }
-            
-            // Fall back to parsing the resolved URL
-            if (data.resolvedUrl) {
-              urlToCheck = data.resolvedUrl;
-            }
-          }
-        } catch (e) {
-          console.error('Failed to resolve short link:', e);
-        }
-      }
-
-      // Try to extract place name from URL
-      // Format: /maps/place/Place+Name+Here/@...
-      const placeMatch = urlToCheck.match(/\/place\/([^/@]+)/);
-      if (placeMatch) {
-        const placeName = decodeURIComponent(placeMatch[1]).replace(/\+/g, ' ');
-        return placeName;
-      }
-
-      // Try to extract from query parameter
-      const qMatch = urlToCheck.match(/[?&]q=([^&@]+)/);
-      if (qMatch) {
-        return decodeURIComponent(qMatch[1]).replace(/\+/g, ' ');
-      }
-
-      // Try to get coordinates
-      const atMatch = urlToCheck.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (atMatch) {
-        return `${atMatch[1]}, ${atMatch[2]}`;
-      }
-
-      return null;
-    } catch (error) {
-      return null;
-    }
-  };
-
-  const handleScheduleMapsLink = async (dayIndex: number, link: string) => {
-    if (!link.trim()) {
-      setScheduleMapsLinks({ ...scheduleMapsLinks, [dayIndex]: '' });
-      return;
-    }
-
-    setScheduleMapsLinks({ ...scheduleMapsLinks, [dayIndex]: link });
-    
-    const address = await parseAddressFromMapsLink(link);
-    if (address) {
-      updateScheduleDay(dayIndex, 'location', address);
-    }
-  };
-
   const handleEventSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -178,6 +107,7 @@ export default function AdminDashboard() {
           date: '',
           time: '',
           location: '',
+          locationName: '',
           description: '',
           type: 'this-week',
         });
@@ -200,6 +130,7 @@ export default function AdminDashboard() {
       date: event.date,
       time: event.time || '',
       location: event.location,
+      locationName: event.locationName || '',
       description: event.description || '',
       type: event.type,
     });
@@ -214,6 +145,7 @@ export default function AdminDashboard() {
       date: '',
       time: '',
       location: '',
+      locationName: '',
       description: '',
       type: 'this-week',
     });
@@ -609,16 +541,34 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-yellow-500 font-semibold mb-2">
-                    Location
+                    Location (Google Maps Link or Address)
                   </label>
                   <input
                     type="text"
                     value={newEvent.location}
                     onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
                     className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
-                    placeholder="Event location"
+                    placeholder="Google Maps link or full address for directions"
                     required
                   />
+                  <p className="text-gray-400 text-xs mt-1">
+                    💡 Tip: For best results with Google Maps links, paste the shortened link in your browser first, then copy the full URL from the address bar (it will have place_id or coordinates).
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-yellow-500 font-semibold mb-2">
+                    Location Display Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newEvent.locationName}
+                    onChange={(e) => setNewEvent({ ...newEvent, locationName: e.target.value })}
+                    className="w-full px-4 py-3 bg-neutral-800 border border-yellow-500/30 rounded-lg text-white focus:outline-none focus:border-yellow-500"
+                    placeholder="e.g., 'Downtown Farmers Market' - shown to users instead of full address"
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    Leave empty to show the full location/address to users
+                  </p>
                 </div>
                 <div>
                   <label className="block text-yellow-500 font-semibold mb-2">
@@ -659,7 +609,7 @@ export default function AdminDashboard() {
                           <p className="text-yellow-500 mb-1">
                             {new Date(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
                           </p>
-                          <p className="text-gray-400 mb-1">📍 {event.location}</p>
+                          <p className="text-gray-400 mb-1">📍 {event.locationName || event.location}</p>
                           {event.description && (
                             <p className="text-gray-400 mt-2">{event.description}</p>
                           )}
@@ -697,34 +647,38 @@ export default function AdminDashboard() {
             <p className="text-gray-400 mb-6 text-sm">
               Set up your regular weekly schedule here. These are the locations where you&apos;ll be every week on these days.
               If you have a one-time event scheduled for a specific day, it will override this schedule for that day only.
-              You can paste a Google Maps link to auto-fill the location, or enter manually.
+              Enter the full address or Google Maps link in Location (used for directions), and optionally add a short display name.
             </p>
             <form onSubmit={handleScheduleSubmit} className="space-y-6">
               {schedule.map((day, index) => (
                 <div key={day.day} className="bg-neutral-800 border border-yellow-500/20 rounded-lg p-4">
                   <h3 className="text-lg font-bold text-yellow-500 mb-3">{day.day}</h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-gray-400 text-sm mb-1">Google Maps Link (Optional)</label>
-                      <input
-                        type="text"
-                        value={scheduleMapsLinks[index] || ''}
-                        onChange={(e) => handleScheduleMapsLink(index, e.target.value)}
-                        className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                        placeholder="Paste Google Maps link to auto-fill location"
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-3">
                       <div>
-                        <label className="block text-gray-400 text-sm mb-1">Location</label>
+                        <label className="block text-gray-400 text-sm mb-1">Location (Google Maps Link or Address)</label>
                         <input
                           type="text"
                           value={day.location || ''}
                           onChange={(e) => updateScheduleDay(index, 'location', e.target.value)}
                           className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                          placeholder="Location or 'Closed'"
+                          placeholder="Google Maps link or full address for directions"
+                        />
+                        <p className="text-gray-400 text-xs mt-1">
+                          💡 Tip: For Google Maps links, open the shortened link first, then copy the full URL from your browser&apos;s address bar.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-1">Location Display Name (Optional)</label>
+                        <input
+                          type="text"
+                          value={day.locationName || ''}
+                          onChange={(e) => updateScheduleDay(index, 'locationName', e.target.value)}
+                          className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
+                          placeholder="e.g., 'Main Street' - shown to users"
                         />
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-gray-400 text-sm mb-1">Time</label>
                         <input
@@ -735,15 +689,16 @@ export default function AdminDashboard() {
                           placeholder="11am - 8pm"
                         />
                       </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-1">Notes</label>
-                        <input
-                          type="text"
-                          value={day.notes || ''}
-                          onChange={(e) => updateScheduleDay(index, 'notes', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                          placeholder="Special notes"
-                        />
+                        <div>
+                          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+                          <input
+                            type="text"
+                            value={day.notes || ''}
+                            onChange={(e) => updateScheduleDay(index, 'notes', e.target.value)}
+                            className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
+                            placeholder="Special notes"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

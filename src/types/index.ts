@@ -12,6 +12,7 @@ export interface TruckEvent {
   date: string;
   time?: string;
   location: string;
+  locationName?: string;
   description?: string;
   type: 'this-week' | 'upcoming';
   createdAt?: Date;
@@ -20,6 +21,7 @@ export interface TruckEvent {
 export interface WeeklySchedule {
   day: string;
   location?: string;
+  locationName?: string;
   time?: string;
   notes?: string;
 }
