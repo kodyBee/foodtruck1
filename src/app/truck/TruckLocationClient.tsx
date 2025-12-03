@@ -96,7 +96,8 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
 
   // Helper function to get display name for location
   const getLocationDisplay = useCallback((item: { location?: string | null; locationName?: string | null }) => {
-    return item.locationName || item.location || '';
+    // Only return locationName if it exists, don't fall back to the URL
+    return item.locationName || '';
   }, []);
 
   // Determine the best location to show on the map
