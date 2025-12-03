@@ -76,7 +76,7 @@ export default function Home() {
     
 
             <p className="text-xl sm:text-2xl max-w-3xl mx-auto leading-relaxed font-medium hero-tagline">
-              Elevating street food with gourmet ingredients and crown-worthy presentation
+              Elevating American food with gourmet ingredients and crown-worthy presentation
             </p>
           </div>
 
@@ -119,7 +119,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-500">5+</p>
+                  <p className="text-2xl font-bold text-yellow-500">25+</p>
                   <p className="text-white text-sm">Years Experience</p>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function Home() {
           {/* Section Header */}
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">
-              Choose <span className="text-yellow-500">Royalty</span>
+              Get down with the <span className="text-yellow-500">Crown</span>
             </h2>
             <p className="text-muted text-lg max-w-2xl mx-auto">
               Experience the perfect blend of quality, convenience, and royal treatment

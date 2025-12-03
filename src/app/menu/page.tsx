@@ -84,9 +84,8 @@ export default function Menu() {
             <div className="w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent"></div>
           </div>
           <p className="text-muted text-xl max-w-3xl mx-auto">
-            Gourmet street food crafted with premium ingredients and crown-worthy presentation
+            Locally owned and serving Jacksonville and surrounding counties
           </p>
-          <p className="text-muted text-lg mt-4 max-w-3xl mx-auto"> Order from our partner toast below</p>
         </div>
       </section>
 
