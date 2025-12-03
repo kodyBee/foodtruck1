@@ -35,12 +35,13 @@ model Event {
 }
 
 model WeeklySchedule {
-  id       String  @id @default(cuid())
-  day      String  @unique
-  location String?
-  time     String?
-  notes    String?
-  order    Int     @default(0) // 0=Monday, 6=Sunday
+  id           String  @id @default(cuid())
+  day          String  @unique
+  location     String?
+  locationName String?
+  time         String?
+  notes        String?
+  order        Int     @default(0) // 0=Monday, 6=Sunday
 }
 
 model MenuItem {
