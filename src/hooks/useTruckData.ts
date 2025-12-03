@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { TruckLocation, TruckEvent, WeeklySchedule } from '@/types';
-import { categorizeEvents, getClosestEvent } from '@/lib/eventUtils';
+import { categorizeEvents, getClosestEvent, type CategorizedEvent } from '@/lib/eventUtils';
 
 interface UseTruckDataReturn {
   location: TruckLocation | null;
@@ -8,7 +8,7 @@ interface UseTruckDataReturn {
   schedule: WeeklySchedule[];
   loading: boolean;
   error: string | null;
-  closestEvent: TruckEvent | null;
+  closestEvent: CategorizedEvent | null;
 }
 
 export function useTruckData(): UseTruckDataReturn {
