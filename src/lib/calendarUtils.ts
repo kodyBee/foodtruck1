@@ -1,4 +1,4 @@
-import type { TruckEvent } from '@/types';
+import type { CategorizedEvent } from './eventUtils';
 import { applyTimeToDate, formatDateForCalendar, parseDateString, TWO_HOURS_MS } from './dateUtils';
 
 interface CalendarEventOptions {
@@ -40,7 +40,7 @@ export function generateCalendarUrl(event: CalendarEventOptions): string {
 /**
  * Open calendar event in new window
  */
-export function addToCalendar(event: TruckEvent): void {
+export function addToCalendar(event: CategorizedEvent): void {
   const url = generateCalendarUrl(event);
   window.open(url, '_blank', 'noopener,noreferrer');
 }

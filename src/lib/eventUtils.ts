@@ -1,7 +1,7 @@
 import type { TruckEvent } from '@/types';
 import { isDateWithinWeek, parseDateString, getTodayAtMidnight, ONE_WEEK_MS } from './dateUtils';
 
-export type CategorizedEvent = TruckEvent & {
+export type CategorizedEvent = Omit<TruckEvent, 'type'> & {
   type: 'this-week' | 'upcoming' | 'past';
 };
 

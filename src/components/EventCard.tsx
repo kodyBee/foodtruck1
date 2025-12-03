@@ -1,9 +1,9 @@
-import type { TruckEvent } from '@/types';
+import type { CategorizedEvent } from '@/lib/eventUtils';
 import { formatDateForDisplay } from '@/lib/dateUtils';
 import { addToCalendar } from '@/lib/calendarUtils';
 
 interface EventCardProps {
-  event: TruckEvent;
+  event: CategorizedEvent;
   showAddToCalendar?: boolean;
 }
 

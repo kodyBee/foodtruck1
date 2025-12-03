@@ -1,8 +1,8 @@
-import type { TruckEvent } from '@/types';
+import type { CategorizedEvent } from '@/lib/eventUtils';
 import EventCard from './EventCard';
 
 interface EventsListProps {
-  events: TruckEvent[];
+  events: CategorizedEvent[];
   title: string;
   emptyMessage?: string;
 }
