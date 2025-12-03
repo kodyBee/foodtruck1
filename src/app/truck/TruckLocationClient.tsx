@@ -95,7 +95,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
   }, []);
 
   // Helper function to get display name for location
-  const getLocationDisplay = useCallback((item: { location?: string; locationName?: string }) => {
+  const getLocationDisplay = useCallback((item: { location?: string | null; locationName?: string | null }) => {
     return item.locationName || item.location || '';
   }, []);
 
