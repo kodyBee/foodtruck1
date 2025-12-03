@@ -23,14 +23,15 @@ model TruckLocation {
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  title       String
-  date        DateTime
-  time        String?
-  location    String
-  description String?
-  type        String   // "this-week" or "upcoming"
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  title        String
+  date         DateTime
+  time         String?
+  location     String
+  locationName String?
+  description  String?
+  type         String   // "this-week" or "upcoming"
+  createdAt    DateTime @default(now())
 }
 
 model WeeklySchedule {

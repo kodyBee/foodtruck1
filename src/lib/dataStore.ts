@@ -108,8 +108,17 @@ export const dataStore = {
   },
 
   updateEvent: async (id: string, event: any) => {
-    const data = { ...event };
-    if (data.date) data.date = new Date(data.date);
+    // Filter to only include valid Prisma Event fields
+    const { title, date, time, location, locationName, description, type } = event;
+    const data: any = {};
+    
+    if (title !== undefined) data.title = title;
+    if (date !== undefined) data.date = new Date(date);
+    if (time !== undefined) data.time = time;
+    if (location !== undefined) data.location = location;
+    if (locationName !== undefined) data.locationName = locationName;
+    if (description !== undefined) data.description = description;
+    if (type !== undefined) data.type = type;
     
     return await prisma.event.update({
       where: { id },

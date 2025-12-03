@@ -65,8 +65,9 @@ export async function PUT(request: Request) {
 
     return NextResponse.json(event);
   } catch (error) {
+    console.error('Error updating event:', error);
     return NextResponse.json(
-      { error: 'Invalid request body' },
+      { error: 'Invalid request body', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 400 }
     );
   }
