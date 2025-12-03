@@ -42,7 +42,7 @@ export default function Home() {
             }}
           >
             <Image
-              src="/truckpic2.jpg"
+              src="/truckpic3.jpg"
               alt="Crown Majestic Kitchen Food Truck"
               fill
               className="object-cover"
