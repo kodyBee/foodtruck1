@@ -1,5 +1,5 @@
 import type { CategorizedEvent } from '@/lib/eventUtils';
-import { formatDateForDisplay } from '@/lib/dateUtils';
+import { formatDateForDisplay, formatTimeTo12Hour } from '@/lib/dateUtils';
 import { addToCalendar } from '@/lib/calendarUtils';
 
 interface EventCardProps {
@@ -28,7 +28,7 @@ export default function EventCard({ event, showAddToCalendar = true }: EventCard
         {event.time && (
           <div className="text-md glass-text-body flex items-center gap-2 mb-1">
             <span className="text-lg" aria-hidden="true">🕒</span>
-            <time>{event.time}</time>
+            <time>{formatTimeTo12Hour(event.time)}</time>
           </div>
         )}
         <div className="text-md glass-text-body flex items-center gap-2 mb-1">

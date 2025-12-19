@@ -19,7 +19,7 @@ export default function EventsList({ events, title, emptyMessage = 'No events sc
             <EventCard
               key={event.id}
               event={event}
-              showAddToCalendar={true}
+              showAddToCalendar={event.type !== 'this-week'}
             />
           ))
         ) : (

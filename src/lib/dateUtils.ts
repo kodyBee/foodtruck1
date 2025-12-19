@@ -74,3 +74,25 @@ export function isDateWithinWeek(dateString: string): boolean {
   
   return eventDate >= today && eventDate <= oneWeekFromNow;
 }
+
+/**
+ * Convert 24-hour time format to 12-hour am/pm format
+ * Handles various input formats: "14:30", "2:30 PM", "14:30:00", etc.
+ */
+export function formatTimeTo12Hour(timeString: string): string {
+  // If already in 12-hour format (contains AM/PM), return as is
+  if (/am|pm/i.test(timeString)) {
+    return timeString;
+  }
+
+  // Parse the time string to extract hours and minutes
+  const timeParts = timeString.split(':');
+  const hours = parseInt(timeParts[0], 10);
+  const minutes = timeParts[1] || '00';
+
+  // Convert to 12-hour format
+  const period = hours >= 12 ? 'pm' : 'am';
+  const hour12 = hours % 12 || 12; // Convert 0 to 12 for midnight
+
+  return `${hour12}:${minutes}${period}`;
+}

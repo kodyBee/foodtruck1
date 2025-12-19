@@ -5,7 +5,7 @@ import type { TruckEvent, WeeklySchedule } from '@/types';
 import { useTruckData } from '@/hooks/useTruckData';
 import { categorizeEvents, getThisWeekEvents, getUpcomingEvents } from '@/lib/eventUtils';
 import { addToCalendar } from '@/lib/calendarUtils';
-import { getTodayAtMidnight, formatDateForDisplay } from '@/lib/dateUtils';
+import { getTodayAtMidnight, formatDateForDisplay, formatTimeTo12Hour } from '@/lib/dateUtils';
 import LocationMap from '@/components/LocationMap';
 import EventsList from '@/components/EventsList';
 
@@ -205,7 +205,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             {dayInfo.event.time && (
                               <div className="text-md glass-text-body flex items-center gap-2 mb-1">
                                 <span className="text-lg" aria-hidden="true">🕒</span>
-                                <time>{dayInfo.event.time}</time>
+                                <time>{formatTimeTo12Hour(dayInfo.event.time)}</time>
                               </div>
                             )}
                             {displayName && (
@@ -230,7 +230,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             {dayInfo.schedule.time && (
                               <div className="text-md glass-text-body flex items-center gap-2 mb-1">
                                 <span className="text-lg" aria-hidden="true">🕒</span>
-                                <time>{dayInfo.schedule.time}</time>
+                                <time>{formatTimeTo12Hour(dayInfo.schedule.time)}</time>
                               </div>
                             )}
                             {dayInfo.schedule.notes && (
@@ -249,17 +249,6 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                           >
                             <span>{isThisToday ? 'Get Directions' : 'Get Directions'}</span>
                           </a>
-                        )}
-                        
-                        {dayInfo.event && (
-                          <button 
-                            onClick={() => addToCalendar(dayInfo.event!)}
-                            className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
-                            aria-label={`Add ${dayInfo.event.title} to Google Calendar`}
-                          >
-                            <span aria-hidden="true">📅</span>
-                            <span>Add to Calendar</span>
-                          </button>
                         )}
                         
                         {!hasLocation && (
