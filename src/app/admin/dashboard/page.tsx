@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { TruckEvent, WeeklySchedule } from '@/types';
-import { parseDateString } from '@/lib/dateUtils';
+import { parseDateString, formatTimeTo12Hour } from '@/lib/dateUtils';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -608,7 +608,7 @@ export default function AdminDashboard() {
                         <div>
                           <h3 className="text-xl font-bold text-white mb-2">{event.title}</h3>
                           <p className="text-yellow-500 mb-1">
-                            {parseDateString(event.date).toLocaleDateString()} {event.time && `at ${event.time}`}
+                            {parseDateString(event.date).toLocaleDateString()} {event.time && `at ${formatTimeTo12Hour(event.time)}`}
                           </p>
                           <p className="text-gray-400 mb-1">📍 {event.locationName || event.location}</p>
                           {event.description && (
