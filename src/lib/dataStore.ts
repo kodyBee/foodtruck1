@@ -99,10 +99,14 @@ export const dataStore = {
   },
   
   addEvent: async (event: any) => {
+    // Parse date string as local timezone to avoid day shifts
+    const [year, month, day] = event.date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    
     return await prisma.event.create({
       data: {
         ...event,
-        date: new Date(event.date)
+        date: localDate
       }
     });
   },
@@ -113,7 +117,11 @@ export const dataStore = {
     const data: any = {};
     
     if (title !== undefined) data.title = title;
-    if (date !== undefined) data.date = new Date(date);
+    if (date !== undefined) {
+      // Parse date string as local timezone to avoid day shifts
+      const [year, month, day] = date.split('-').map(Number);
+      data.date = new Date(year, month - 1, day);
+    }
     if (time !== undefined) data.time = time;
     if (location !== undefined) data.location = location;
     if (locationName !== undefined) data.locationName = locationName;
