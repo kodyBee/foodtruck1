@@ -41,6 +41,7 @@ model WeeklySchedule {
   locationName String?
   time         String?
   notes        String?
+  description  String?
   order        Int     @default(0) // 0=Monday, 6=Sunday
 }
 

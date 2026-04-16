@@ -154,13 +154,14 @@ export const dataStore = {
     const updates = schedule.map(day => 
       prisma.weeklySchedule.upsert({
         where: { day: day.day },
-        update: { location: day.location, locationName: day.locationName, time: day.time, notes: day.notes },
+        update: { location: day.location, locationName: day.locationName, time: day.time, notes: day.notes, description: day.description },
         create: { 
           day: day.day, 
           location: day.location,
           locationName: day.locationName,
           time: day.time, 
           notes: day.notes,
+          description: day.description,
           order: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].indexOf(day.day)
         }
       })

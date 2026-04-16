@@ -24,6 +24,7 @@ export interface WeeklySchedule {
   locationName?: string;
   time?: string;
   notes?: string;
+  description?: string;
 }
 
 export interface MenuItem {

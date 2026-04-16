@@ -602,32 +602,41 @@ export default function AdminDashboard() {
                   {events.map((event) => (
                     <div
                       key={event.id}
-                      className="bg-neutral-800 border border-yellow-500/20 rounded-lg p-4"
+                      className="bg-neutral-800 border border-yellow-500/20 rounded-lg p-5"
                     >
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-xl font-bold text-white mb-2">{event.title}</h3>
-                          <p className="text-yellow-500 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-white">{event.title}</h3>
+                            <span className="flex-shrink-0 px-3 py-0.5 bg-yellow-500/20 text-yellow-500 text-xs font-medium rounded-full">
+                              {event.type === 'this-week' ? 'This Week' : 'Upcoming'}
+                            </span>
+                          </div>
+                          <p className="text-yellow-500 text-sm mb-1">
                             {parseDateString(event.date).toLocaleDateString()} {event.time && `at ${formatTimeTo12Hour(event.time)}`}
                           </p>
-                          <p className="text-gray-400 mb-1">📍 {event.locationName || event.location}</p>
-                          {event.description && (
-                            <p className="text-gray-400 mt-2">{event.description}</p>
+                          <p className="text-gray-300 text-sm mb-0.5">
+                            📍 {event.locationName || event.location}
+                          </p>
+                          {event.locationName && event.location && (
+                            <p className="text-gray-500 text-xs truncate mb-1">
+                              ↳ {event.location}
+                            </p>
                           )}
-                          <span className="inline-block mt-2 px-3 py-1 bg-yellow-500/20 text-yellow-500 text-sm rounded">
-                            {event.type === 'this-week' ? 'This Week' : 'Upcoming'}
-                          </span>
+                          {event.description && (
+                            <p className="text-gray-400 text-sm mt-2 italic">{event.description}</p>
+                          )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 ml-4 flex-shrink-0">
                           <button
                             onClick={() => handleEditEvent(event)}
-                            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors"
+                            className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-sm font-medium rounded-lg transition-colors border border-blue-500/30"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteEvent(event.id)}
-                            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+                            className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium rounded-lg transition-colors border border-red-500/30"
                           >
                             Delete
                           </button>
@@ -644,74 +653,111 @@ export default function AdminDashboard() {
         {/* Schedule Tab */}
         {activeTab === 'schedule' && (
           <div className="bg-neutral-900 border border-yellow-500/30 rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Weekly Schedule - Recurring Locations</h2>
-            <p className="text-gray-400 mb-6 text-sm">
-              Set up your regular weekly schedule here. These are the locations where you&apos;ll be every week on these days.
-              If you have a one-time event scheduled for a specific day, it will override this schedule for that day only.
-              Enter the full address or Google Maps link in Location (used for directions), and optionally add a short display name.
-            </p>
-            <form onSubmit={handleScheduleSubmit} className="space-y-6">
-              {schedule.map((day, index) => (
-                <div key={day.day} className="bg-neutral-800 border border-yellow-500/20 rounded-lg p-4">
-                  <h3 className="text-lg font-bold text-yellow-500 mb-3">{day.day}</h3>
-                  <div className="space-y-3">
-                    <div className="space-y-3">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">Weekly Schedule</h2>
+                <p className="text-gray-500 text-sm">
+                  {schedule.filter(d => d.location).length} of 7 days configured
+                </p>
+              </div>
+            </div>
+            <div className="bg-neutral-800/50 border border-yellow-500/10 rounded-lg p-4 mb-6">
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Set your regular weekly locations here. One-time events will override these on their specific date.
+                <strong className="text-yellow-500/80"> Description</strong> is shown to customers on the truck page.
+                <strong className="text-gray-500"> Notes</strong> are private and only visible here.
+              </p>
+            </div>
+            <form onSubmit={handleScheduleSubmit} className="space-y-4">
+              {schedule.map((day, index) => {
+                const hasData = !!(day.location || day.locationName || day.time || day.description);
+                return (
+                  <div key={day.day} className={`bg-neutral-800 border rounded-lg overflow-hidden transition-all ${hasData ? 'border-yellow-500/40' : 'border-neutral-700/50'}`}>
+                    <div className="flex justify-between items-center px-5 py-3 bg-neutral-800/80">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2.5 h-2.5 rounded-full ${hasData ? 'bg-yellow-500' : 'bg-neutral-600'}`} />
+                        <h3 className="text-lg font-bold text-yellow-500">{day.day}</h3>
+                      </div>
+                      {hasData && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...schedule];
+                            updated[index] = { day: day.day, location: '', locationName: '', time: '', notes: '', description: '' };
+                            setSchedule(updated);
+                          }}
+                          className="text-xs text-gray-500 hover:text-red-400 transition-colors px-2 py-1 rounded hover:bg-red-500/10"
+                        >
+                          Clear Day
+                        </button>
+                      )}
+                    </div>
+                    <div className="px-5 pb-5 pt-3 space-y-3">
                       <div>
-                        <label className="block text-gray-400 text-sm mb-1">Location (Google Maps Link or Address)</label>
+                        <label className="block text-gray-400 text-xs font-medium mb-1 uppercase tracking-wider">Location / Address</label>
                         <input
                           type="text"
                           value={day.location || ''}
                           onChange={(e) => updateScheduleDay(index, 'location', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                          placeholder="Google Maps link or full address for directions"
-                        />
-                        <p className="text-gray-400 text-xs mt-1">
-                          💡 Tip: For Google Maps links, open the shortened link first, then copy the full URL from your browser&apos;s address bar.
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-1">Location Display Name (Optional)</label>
-                        <input
-                          type="text"
-                          value={day.locationName || ''}
-                          onChange={(e) => updateScheduleDay(index, 'locationName', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                          placeholder="e.g., 'Main Street' - shown to users"
+                          className="w-full px-3 py-2.5 bg-neutral-700/70 border border-neutral-600 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
+                          placeholder="Google Maps link or full address — used for directions"
                         />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-gray-400 text-sm mb-1">Time</label>
-                        <input
-                          type="text"
-                          value={day.time || ''}
-                          onChange={(e) => updateScheduleDay(index, 'time', e.target.value)}
-                          className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                          placeholder="11am - 8pm"
-                        />
-                      </div>
                         <div>
-                          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+                          <label className="block text-gray-400 text-xs font-medium mb-1 uppercase tracking-wider">Display Name</label>
                           <input
                             type="text"
-                            value={day.notes || ''}
-                            onChange={(e) => updateScheduleDay(index, 'notes', e.target.value)}
-                            className="w-full px-3 py-2 bg-neutral-700 border border-yellow-500/30 rounded text-white text-sm focus:outline-none focus:border-yellow-500"
-                            placeholder="Special notes"
+                            value={day.locationName || ''}
+                            onChange={(e) => updateScheduleDay(index, 'locationName', e.target.value)}
+                            className="w-full px-3 py-2.5 bg-neutral-700/70 border border-neutral-600 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
+                            placeholder="e.g., Downtown Farmers Market"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-gray-400 text-xs font-medium mb-1 uppercase tracking-wider">Hours</label>
+                          <input
+                            type="text"
+                            value={day.time || ''}
+                            onChange={(e) => updateScheduleDay(index, 'time', e.target.value)}
+                            className="w-full px-3 py-2.5 bg-neutral-700/70 border border-neutral-600 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
+                            placeholder="11am – 8pm"
                           />
                         </div>
                       </div>
+                      <div>
+                        <label className="block text-yellow-500/80 text-xs font-medium mb-1 uppercase tracking-wider">Description <span className="text-gray-500 normal-case">(shown to customers)</span></label>
+                        <textarea
+                          value={day.description || ''}
+                          onChange={(e) => updateScheduleDay(index, 'description', e.target.value)}
+                          className="w-full px-3 py-2.5 bg-neutral-700/70 border border-neutral-600 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors resize-none"
+                          rows={2}
+                          placeholder="e.g., Come grab lunch at our usual spot! Special BBQ menu today."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-500 text-xs font-medium mb-1 uppercase tracking-wider">Notes <span className="normal-case">(admin only — not shown on website)</span></label>
+                        <input
+                          type="text"
+                          value={day.notes || ''}
+                          onChange={(e) => updateScheduleDay(index, 'notes', e.target.value)}
+                          className="w-full px-3 py-2.5 bg-neutral-700/40 border border-neutral-700 rounded-lg text-gray-400 text-sm focus:outline-none focus:border-gray-500 transition-colors"
+                          placeholder="Internal reminders, parking info, etc."
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Updating...' : 'Update Schedule'}
-              </button>
+                );
+              })}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save Schedule'}
+                </button>
+              </div>
             </form>
           </div>
         )}

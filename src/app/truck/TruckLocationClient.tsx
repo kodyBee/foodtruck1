@@ -45,7 +45,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
         daysFromToday,
         date: dateStr,
         event: eventOnThisDay || null,
-        schedule: scheduleForDay || { day: dayName, location: null, time: null, notes: null }
+        schedule: scheduleForDay || { day: dayName, location: null, time: null, notes: null, description: null }
       };
     }).sort((a, b) => a.daysFromToday - b.daysFromToday);
   }, [thisWeekEvents, schedule]);
@@ -94,11 +94,20 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationAddress)}`;
   }, []);
 
-  // Helper function to get display name for location
-  const getLocationDisplay = useCallback((item: { location?: string | null; locationName?: string | null }) => {
-    // Only return locationName if it exists, don't fall back to the URL
-    return item.locationName || '';
+  // Helper to detect if a string is a URL rather than a human-readable address
+  const isUrl = useCallback((str: string) => {
+    return /^https?:\/\//.test(str) || str.includes('maps.app.goo.gl') || str.includes('goo.gl') || str.includes('google.com/maps');
   }, []);
+
+  // Helper function to get display info for a location
+  // Returns { name, address } where address is only set if it's human-readable (not a URL)
+  const getLocationInfo = useCallback((item: { location?: string | null; locationName?: string | null }) => {
+    const name = item.locationName || '';
+    const rawLocation = item.location || '';
+    // Only show the address if it's a real address, not a Google Maps URL
+    const address = (rawLocation && !isUrl(rawLocation)) ? rawLocation : '';
+    return { name, address };
+  }, [isUrl]);
 
   // Determine the best location to show on the map
   // Priority: 1) closest event location, 2) API location
@@ -180,7 +189,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                 {weekView.map((dayInfo) => {
                   const isThisToday = dayInfo.daysFromToday === 0;
                   const hasLocation = dayInfo.event?.location || dayInfo.schedule.location;
-                  const displayName = getLocationDisplay(dayInfo.event || dayInfo.schedule);
+                  const locationInfo = getLocationInfo(dayInfo.event || dayInfo.schedule);
                   
                   return (
                     <div
@@ -208,33 +217,44 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                                 <time>{formatTimeTo12Hour(dayInfo.event.time)}</time>
                               </div>
                             )}
-                            {displayName && (
-                              <div className="text-md glass-text-body flex items-center gap-2 mb-1">
+                            {locationInfo.name && (
+                              <div className="text-md glass-text-body flex items-center gap-2 mb-0.5">
                                 <span className="text-lg" aria-hidden="true">📍</span>
-                                <span>{displayName}</span>
+                                <span>{locationInfo.name}</span>
+                              </div>
+                            )}
+                            {locationInfo.address && (
+                              <div className="text-sm glass-text-body text-center mb-1 opacity-80">
+                                {locationInfo.address}
                               </div>
                             )}
                             {dayInfo.event.description && (
-                              <div className="text-sm glass-text-body italic mb-2 text-center">{dayInfo.event.description}</div>
+                              <div className="text-sm glass-text-body italic mb-2 text-center mt-1">{dayInfo.event.description}</div>
                             )}
                           </>
                         ) : (
                           <>
                             <div className="text-xl font-bold glass-text-subheading text-center mb-2">
-                              {displayName ? (
-                                displayName
+                              {locationInfo.name ? (
+                                locationInfo.name
                               ) : (
                                 <span className='text-gray-500 italic'>{formatDateForDisplay(dayInfo.date)}</span>
                               )}
                             </div>
+                            {locationInfo.address && (
+                              <div className="text-sm glass-text-body flex items-center gap-2 mb-1 opacity-80">
+                                <span className="text-lg" aria-hidden="true">📍</span>
+                                <span>{locationInfo.address}</span>
+                              </div>
+                            )}
                             {dayInfo.schedule.time && (
                               <div className="text-md glass-text-body flex items-center gap-2 mb-1">
                                 <span className="text-lg" aria-hidden="true">🕒</span>
                                 <time>{formatTimeTo12Hour(dayInfo.schedule.time)}</time>
                               </div>
                             )}
-                            {dayInfo.schedule.notes && (
-                              <div className="text-sm glass-text-body italic mb-2">{dayInfo.schedule.notes}</div>
+                            {dayInfo.schedule.description && (
+                              <div className="text-sm glass-text-body italic mb-2 text-center mt-1">{dayInfo.schedule.description}</div>
                             )}
                           </>
                         )}
@@ -247,7 +267,7 @@ export default function TruckLocationClient({ apiKey }: TruckLocationClientProps
                             className="mt-3 px-6 py-2 rounded-full glass-button text-black font-bold shadow hover:scale-105 transition-all flex items-center gap-2 text-lg border border-yellow-400"
                             aria-label={isThisToday ? "Get directions to today's location" : `Get directions to ${dayInfo.day} location`}
                           >
-                            <span>{isThisToday ? 'Get Directions' : 'Get Directions'}</span>
+                            <span>Get Directions</span>
                           </a>
                         )}
                         
